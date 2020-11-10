@@ -26,7 +26,7 @@ namespace Rekommend_BackEnd.Controllers
             _propertyCheckerService = propertyCheckerService ?? throw new ArgumentNullException(nameof(propertyCheckerService));
         }
 
-        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
+        //[Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetTechJobOpenings")]
         [HttpHead]
         public IActionResult GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name ="Accept")] string mediaType)

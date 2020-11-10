@@ -7,6 +7,7 @@ using Rekommend_BackEnd.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Repositories
 {
@@ -30,11 +31,15 @@ namespace Rekommend_BackEnd.Repositories
 
             var collection = _context.TechJobOpenings as IQueryable<TechJobOpening>;
 
-            if(techJobOpeningsResourceParameters.CompanyCategory >= 0)
+            if(techJobOpeningsResourceParameters.CompanyCategory != CompanyCategory.Undefined)
             {
                 collection = collection.Where(a => a.Recruiter.Company.Category == techJobOpeningsResourceParameters.CompanyCategory);
             }
-            if(techJobOpeningsResourceParameters.City >= 0)
+            if (techJobOpeningsResourceParameters.JobTechLanguage != JobTechLanguage.Undefined)
+            {
+                collection = collection.Where(a => a.JobTechLanguage == techJobOpeningsResourceParameters.JobTechLanguage);
+            }
+            if (techJobOpeningsResourceParameters.City != City.Undefined)
             {
                 collection = collection.Where(a => a.City == techJobOpeningsResourceParameters.City);
             }
@@ -42,15 +47,22 @@ namespace Rekommend_BackEnd.Repositories
             {
                 collection = collection.Where(a => a.RemoteWorkAccepted == true);
             }
-            if(techJobOpeningsResourceParameters.ContractType >= 0)
+            if(techJobOpeningsResourceParameters.ContractType != ContractType.Undefined)
             {
                 collection = collection.Where(a => a.ContractType == techJobOpeningsResourceParameters.ContractType);
+            }
+            if(techJobOpeningsResourceParameters.Position != Position.Undefined)
+            {
+                collection = collection.Where(a => a.JobPosition == techJobOpeningsResourceParameters.Position);
+            }
+            if(techJobOpeningsResourceParameters.Seniority != Seniority.Undefined)
+            {
+                collection = collection.Where(a => a.Seniority == techJobOpeningsResourceParameters.Seniority);
             }
             if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.SearchQuery))
             {
                 var searchQuery = techJobOpeningsResourceParameters.SearchQuery.Trim();
-                collection = collection.Where(a => a.Recruiter.Company.Name.Contains(searchQuery)
-                    || a.JobTechLanguage.ToString().Contains(searchQuery));
+                collection = collection.Where(a => a.Recruiter.Company.Name.ToLower().Contains(searchQuery.ToLower()));
             }
             HashSet<string> propertiesHashSet;
             if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.OrderBy) && _entityPropertiesService.TryGetPropertiesHash("TechJobOpening", out propertiesHashSet))
