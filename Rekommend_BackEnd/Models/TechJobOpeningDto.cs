@@ -17,8 +17,8 @@ namespace Rekommend_BackEnd.Models
         public ContractType ContractType { get; set; }
         public bool RemoteWorkAccepted { get; set; }
         public string MissionDescription { get; set; }
-        public string City { get; set; }
-        public string Country { get; set; }
+        public City City { get; set; }
+        public Country Country { get; set; }
         public string Reward1 { get; set; }
         public string Reward2 { get; set; }
         public string Reward3 { get; set; }

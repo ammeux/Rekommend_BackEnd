@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rekommend_BackEnd.DbContexts;
+using Rekommend_BackEnd.Repositories;
+using Rekommend_BackEnd.Services;
 using System.IO;
 
 namespace Rekommend_BackEnd
@@ -32,6 +34,12 @@ namespace Rekommend_BackEnd
 
             // Add controllers
             services.AddControllers();
+
+            services.AddTransient<IEntityPropertiesService, EntityPropertiesService>();
+            services.AddTransient<IRekommendRepository, RekommendRepository>();
+            services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
+            
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

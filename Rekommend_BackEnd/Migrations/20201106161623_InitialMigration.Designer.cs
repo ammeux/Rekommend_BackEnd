@@ -10,8 +10,8 @@ using Rekommend_BackEnd.DbContexts;
 namespace Rekommend_BackEnd.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20201105113638_InitialEntities")]
-    partial class InitialEntities
+    [Migration("20201106161623_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -41,6 +41,11 @@ namespace Rekommend_BackEnd.Migrations
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
+                    b.Property<string>("LogoFileName")
+                        .IsRequired()
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("character varying(50)")
@@ -50,11 +55,6 @@ namespace Rekommend_BackEnd.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Website")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("logoFileName")
                         .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
@@ -246,10 +246,8 @@ namespace Rekommend_BackEnd.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
+                    b.Property<int>("City")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("ClosingDate")
                         .HasColumnType("timestamp with time zone");
@@ -257,10 +255,8 @@ namespace Rekommend_BackEnd.Migrations
                     b.Property<int>("ContractType")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
+                    b.Property<int>("Country")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreationDate")
                         .HasColumnType("timestamp with time zone");
@@ -284,6 +280,10 @@ namespace Rekommend_BackEnd.Migrations
                         .IsRequired()
                         .HasColumnType("character varying(1500)")
                         .HasMaxLength(1500);
+
+                    b.Property<string>("PictureFileName")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
 
                     b.Property<Guid>("RecruiterId")
                         .HasColumnType("uuid");
@@ -324,12 +324,8 @@ namespace Rekommend_BackEnd.Migrations
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
-                    b.Property<int>("ViewNb")
+                    b.Property<int>("ViewsNb")
                         .HasColumnType("integer");
-
-                    b.Property<string>("pictureFileName")
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
 
                     b.HasKey("Id");
 

@@ -34,11 +34,9 @@ namespace Rekommend_BackEnd.Entities
         [MaxLength(1500)]
         public string MissionDescription { get; set; }
         [Required]
-        [MaxLength(50)]
-        public string City { get; set; }
+        public City City { get; set; }
         [Required]
-        [MaxLength(50)]
-        public string Country { get; set; }
+        public Country Country { get; set; }
         [MaxLength(50)]
         public string Reward1 { get; set; }
         [MaxLength(50)]
@@ -47,13 +45,13 @@ namespace Rekommend_BackEnd.Entities
         public string Reward3 { get; set; }
         public int LikesNb { get; set; }
         public int RekommendationsNb { get; set; }
-        public int ViewNb { get; set; }
+        public int ViewsNb { get; set; }
         public int MinimumSalary { get; set; }
         public int MaximumSalary { get; set; }
         [Required]
         public JobOfferStatus Status { get; set; }
         [MaxLength(50)]
-        public string pictureFileName { get; set; }
+        public string PictureFileName { get; set; }
         [MaxLength(1500)]
         public string RseDescription { get; set; }
     }

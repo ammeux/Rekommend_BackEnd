@@ -70,6 +70,25 @@
             Other
         }
 
+        public enum City
+        {
+            Paris,
+            Other
+        }
+
+        public enum Country
+        {
+            France,
+            Other
+        }
+
+        public enum ResourceUriType
+        {
+            PreviousPage,
+            NextPage,
+            Current
+        }
+
 
     }
 }

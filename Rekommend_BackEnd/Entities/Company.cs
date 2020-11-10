@@ -24,7 +24,7 @@ namespace Rekommend_BackEnd.Entities
         public CompanyCategory Category { get; set; }
         [Required]
         [MaxLength(50)]
-        public string logoFileName { get; set; }
+        public string LogoFileName { get; set; }
         [Required]
         [MaxLength(50)]
         public string Website { get; set; }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Rekommend_BackEnd.Migrations
 {
-    public partial class InitialEntities : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -17,7 +17,7 @@ namespace Rekommend_BackEnd.Migrations
                     HqCity = table.Column<string>(maxLength: 50, nullable: false),
                     CompanyDescription = table.Column<string>(maxLength: 1500, nullable: false),
                     Category = table.Column<int>(maxLength: 50, nullable: false),
-                    logoFileName = table.Column<string>(maxLength: 50, nullable: false),
+                    LogoFileName = table.Column<string>(maxLength: 50, nullable: false),
                     Website = table.Column<string>(maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -114,18 +114,18 @@ namespace Rekommend_BackEnd.Migrations
                     ContractType = table.Column<int>(nullable: false),
                     RemoteWorkAccepted = table.Column<bool>(nullable: false),
                     MissionDescription = table.Column<string>(maxLength: 1500, nullable: false),
-                    City = table.Column<string>(maxLength: 50, nullable: false),
-                    Country = table.Column<string>(maxLength: 50, nullable: false),
+                    City = table.Column<int>(nullable: false),
+                    Country = table.Column<int>(nullable: false),
                     Reward1 = table.Column<string>(maxLength: 50, nullable: true),
                     Reward2 = table.Column<string>(maxLength: 50, nullable: true),
                     Reward3 = table.Column<string>(maxLength: 50, nullable: true),
                     LikesNb = table.Column<int>(nullable: false),
                     RekommendationsNb = table.Column<int>(nullable: false),
-                    ViewNb = table.Column<int>(nullable: false),
+                    ViewsNb = table.Column<int>(nullable: false),
                     MinimumSalary = table.Column<int>(nullable: false),
                     MaximumSalary = table.Column<int>(nullable: false),
                     Status = table.Column<int>(nullable: false),
-                    pictureFileName = table.Column<string>(maxLength: 50, nullable: true),
+                    PictureFileName = table.Column<string>(maxLength: 50, nullable: true),
                     RseDescription = table.Column<string>(maxLength: 1500, nullable: true)
                 },
                 constraints: table =>
