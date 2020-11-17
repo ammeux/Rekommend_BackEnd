@@ -6,13 +6,13 @@ namespace Rekommend_BackEnd.ResourceParameters
     {
         const int maxPageSize = 20;
         private int _pageSize = 10;
-        public JobTechLanguage JobTechLanguage { get; set; }
-        public CompanyCategory CompanyCategory { get; set; }
-        public City City { get; set; }
-        public Seniority Seniority { get; set; }
-        public Position Position { get; set; }
+        public string JobTechLanguage { get; set; }
+        public string CompanyCategory { get; set; }
+        public string City { get; set; }
+        public string Seniority { get; set; }
+        public string JobPosition { get; set; }
         public bool RemoteWorkAccepted { get; set; }
-        public ContractType ContractType { get; set; }
+        public string ContractType { get; set; }
         public string SearchQuery { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize

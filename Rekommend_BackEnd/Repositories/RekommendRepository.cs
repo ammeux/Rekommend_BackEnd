@@ -1,4 +1,5 @@
-﻿using Rekommend_BackEnd.DbContexts;
+﻿using Microsoft.EntityFrameworkCore;
+using Rekommend_BackEnd.DbContexts;
 using Rekommend_BackEnd.Entities;
 using Rekommend_BackEnd.Extensions;
 using Rekommend_BackEnd.ResourceParameters;
@@ -29,48 +30,85 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(TechJobOpeningsResourceParameters));
             }
 
-            var collection = _context.TechJobOpenings as IQueryable<TechJobOpening>;
+            var collection = _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company) as IQueryable<TechJobOpening>;
 
-            if(techJobOpeningsResourceParameters.CompanyCategory != CompanyCategory.Undefined)
+            var companyCategory = techJobOpeningsResourceParameters.CompanyCategory.ToCompanyCategory();
+            if (companyCategory != CompanyCategory.Undefined)
             {
-                collection = collection.Where(a => a.Recruiter.Company.Category == techJobOpeningsResourceParameters.CompanyCategory);
+                collection = collection.Where(a => a.Recruiter.Company.Category == companyCategory);
             }
-            if (techJobOpeningsResourceParameters.JobTechLanguage != JobTechLanguage.Undefined)
+
+            var jobTechLanguage = techJobOpeningsResourceParameters.JobTechLanguage.ToJobTechLanguage();
+            if (jobTechLanguage != JobTechLanguage.Undefined)
             {
-                collection = collection.Where(a => a.JobTechLanguage == techJobOpeningsResourceParameters.JobTechLanguage);
+                collection = collection.Where(a => a.JobTechLanguage == jobTechLanguage);
             }
-            if (techJobOpeningsResourceParameters.City != City.Undefined)
+
+            var city = techJobOpeningsResourceParameters.City.ToCity();
+            if (city != City.Undefined)
             {
-                collection = collection.Where(a => a.City == techJobOpeningsResourceParameters.City);
+                collection = collection.Where(a => a.City == city);
             }
+
             if(techJobOpeningsResourceParameters.RemoteWorkAccepted == true)
             {
                 collection = collection.Where(a => a.RemoteWorkAccepted == true);
             }
-            if(techJobOpeningsResourceParameters.ContractType != ContractType.Undefined)
+
+            var contractType = techJobOpeningsResourceParameters.ContractType.toContractType();
+            if(contractType != ContractType.Undefined)
             {
-                collection = collection.Where(a => a.ContractType == techJobOpeningsResourceParameters.ContractType);
+                collection = collection.Where(a => a.ContractType == contractType);
             }
-            if(techJobOpeningsResourceParameters.Position != Position.Undefined)
+
+            var jobPosition = techJobOpeningsResourceParameters.JobPosition.toJobPosition();
+            if(jobPosition != Position.Undefined)
             {
-                collection = collection.Where(a => a.JobPosition == techJobOpeningsResourceParameters.Position);
+                collection = collection.Where(a => a.JobPosition == jobPosition);
             }
-            if(techJobOpeningsResourceParameters.Seniority != Seniority.Undefined)
+
+            var seniority = techJobOpeningsResourceParameters.Seniority.toSeniority();
+            if(seniority != Seniority.Undefined)
             {
-                collection = collection.Where(a => a.Seniority == techJobOpeningsResourceParameters.Seniority);
+                collection = collection.Where(a => a.Seniority == seniority);
             }
+
             if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.SearchQuery))
             {
                 var searchQuery = techJobOpeningsResourceParameters.SearchQuery.Trim();
                 collection = collection.Where(a => a.Recruiter.Company.Name.ToLower().Contains(searchQuery.ToLower()));
             }
-            HashSet<string> propertiesHashSet;
-            if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.OrderBy) && _entityPropertiesService.TryGetPropertiesHash("TechJobOpening", out propertiesHashSet))
-            {
-                collection = collection.ApplySort(techJobOpeningsResourceParameters.OrderBy, propertiesHashSet);
-            }
 
             return PagedList<TechJobOpening>.Create(collection, techJobOpeningsResourceParameters.PageNumber, techJobOpeningsResourceParameters.PageSize);
+        }
+
+        public IDictionary<Guid, Recruiter> GetRecruiters(IEnumerable<Guid> recruiterIds)
+        {
+            if(recruiterIds == null)
+            {
+                throw new ArgumentNullException(nameof(recruiterIds));
+            }
+
+            return _context.Recruiters.Where(a => recruiterIds.Contains(a.Id)).ToDictionary(x=>x.Id, y=>y);
+        }
+
+        public IEnumerable<Recruiter> GetCompanies(IEnumerable<Guid> companyIds)
+        {
+            if (companyIds == null)
+            {
+                throw new ArgumentNullException(nameof(companyIds));
+            }
+
+            return _context.Recruiters.Where(a => companyIds.Contains(a.Id));
+        }
+
+        public Recruiter GetRecruiter(Guid recruiterId)
+        {
+            return _context.Recruiters.FirstOrDefault(a => a.Id == recruiterId);
+        }
+        public Company GetCompany(Guid companyId)
+        {
+            return _context.Companies.FirstOrDefault(a => a.Id == companyId);
         }
     }
 }
