@@ -30,11 +30,11 @@ namespace Rekommend_BackEnd.Models
         public string Reward3 { get; set; }
         public int LikesNb { get; set; }
         public int RekommendationsNb { get; set; }
-        public int ViewNb { get; set; }
+        public int ViewsNb { get; set; }
         public int MinimumSalary { get; set; }
         public int MaximumSalary { get; set; }
         public JobOfferStatus Status { get; set; }
-        public string pictureFileName { get; set; }
+        public string PictureFileName { get; set; }
         public string RseDescription { get; set; }
     }
 }

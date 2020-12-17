@@ -8,6 +8,10 @@ using Rekommend_BackEnd.DbContexts;
 using Rekommend_BackEnd.Repositories;
 using Rekommend_BackEnd.Services;
 using System.IO;
+using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Rekommend_BackEnd
 {
@@ -33,13 +37,63 @@ namespace Rekommend_BackEnd
             services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(Configuration.GetConnectionString("RekommendDbConnection")));
 
             // Add controllers
-            services.AddControllers();
+            services.AddControllers(setupAction =>
+            {
+                // By default, return not acceptable mediaType
+                setupAction.ReturnHttpNotAcceptable = true;
+            })
+            .ConfigureApiBehaviorOptions(setupAction =>
+            {
+                setupAction.InvalidModelStateResponseFactory = context =>
+                {
+                    // Creation of a problem details object
+                    var problemDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                    var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(context.HttpContext,
+                        context.ModelState);
 
-            services.AddTransient<IEntityPropertiesService, EntityPropertiesService>();
+                    // Add additional info not added by default
+                    problemDetails.Detail = "See the error fields for more detail.";
+                    problemDetails.Instance = context.HttpContext.Request.Path;
+
+                    // Find out which status to use
+                    var actionExecutingContext = context as Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext;
+
+                    // If there are modelstate errors, deal with validation errors
+                    if((context.ModelState.ErrorCount >0) && (actionExecutingContext?.ActionArguments.Count == context.ActionDescriptor.Parameters.Count))
+                    {
+                        problemDetails.Type = "modelValidationProblem";
+                        problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                        problemDetails.Title = "Validation errors have been raised";
+
+                        return new UnprocessableEntityObjectResult(problemDetails)
+                        {
+                            ContentTypes = { "application/problem+json" }
+                        };
+                    };
+
+                    // If one of the arguments was not correctly found / could not be parsed we are dealing with null/unparsable input
+                    problemDetails.Status = StatusCodes.Status400BadRequest;
+                    problemDetails.Title = "One or more errors on input occured";
+                    return new BadRequestObjectResult(problemDetails)
+                    {
+                        ContentTypes = { "application/problem+json" }
+                    };
+                };
+             })
+            //used to render CamelCase properties
+            .AddNewtonsoftJson(
+            setupAction =>
+            {
+                setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            });
+
+            //services.AddTransient<IEntityPropertiesService, EntityPropertiesService>();
             services.AddTransient<IRekommendRepository, RekommendRepository>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
-            
-            
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +102,18 @@ namespace Rekommend_BackEnd
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                // Default exception handler that can be configured
+                app.UseExceptionHandler(appBuilder =>
+                {
+                    appBuilder.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("An unexpected fault happened. Try again later.");
+                    });
+                });
             }
 
             app.UseHttpsRedirection();

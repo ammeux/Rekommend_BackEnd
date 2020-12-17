@@ -39,6 +39,11 @@ namespace Rekommend_BackEnd.Migrations
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
+                    b.Property<string>("HqCountry")
+                        .IsRequired()
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
                     b.Property<string>("LogoFileName")
                         .IsRequired()
                         .HasColumnType("character varying(50)")
@@ -48,6 +53,9 @@ namespace Rekommend_BackEnd.Migrations
                         .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
+
+                    b.Property<int>("PostCode")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("RegistrationDate")
                         .HasColumnType("timestamp with time zone");
@@ -68,26 +76,23 @@ namespace Rekommend_BackEnd.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
-
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)")
-                        .HasMaxLength(50);
-
                     b.Property<DateTimeOffset>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -227,6 +232,9 @@ namespace Rekommend_BackEnd.Migrations
                     b.Property<int>("Position")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PostCode")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("RegistrationDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -244,8 +252,9 @@ namespace Rekommend_BackEnd.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("City")
-                        .HasColumnType("integer");
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("ClosingDate")
                         .HasColumnType("timestamp with time zone");
@@ -282,6 +291,9 @@ namespace Rekommend_BackEnd.Migrations
                     b.Property<string>("PictureFileName")
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
+
+                    b.Property<int>("PostCode")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("RecruiterId")
                         .HasColumnType("uuid");

@@ -31,5 +31,7 @@ namespace Rekommend_BackEnd.Entities
         [Required]
         [MaxLength(50)]
         public string Email { get; set; }
+        [Required]
+        public int PostCode { get; set; }
     }
 }

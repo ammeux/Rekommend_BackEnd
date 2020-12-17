@@ -34,7 +34,9 @@ namespace Rekommend_BackEnd.Entities
         [MaxLength(1500)]
         public string MissionDescription { get; set; }
         [Required]
-        public City City { get; set; }
+        public string City { get; set; }
+        [Required]
+        public int PostCode { get; set; }
         [Required]
         public Country Country { get; set; }
         [MaxLength(50)]

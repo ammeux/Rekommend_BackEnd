@@ -51,27 +51,27 @@ namespace Rekommend_BackEnd.Extensions
             }
         }
 
-        public static City ToCity(this string source)
+        public static Country ToCountry(this string source)
         {
             if (source == null)
             {
-                return City.Undefined;
+                return Country.Undefined;
             }
 
             switch (source.ToLower())
             {
                 case "undefined":
-                    return City.Undefined;
-                case "paris":
-                    return City.Paris;
+                    return Country.Undefined;
+                case "france":
+                    return Country.France;
                 case "other":
-                    return City.Other;
+                    return Country.Other;
                 default:
-                    return City.Undefined;
+                    return Country.Undefined;
             }
         }
 
-        public static ContractType toContractType(this string source)
+        public static ContractType ToContractType(this string source)
         {
             if (source == null)
             {
@@ -97,7 +97,7 @@ namespace Rekommend_BackEnd.Extensions
             }
         }
 
-        public static Position toJobPosition(this string source)
+        public static Position ToJobPosition(this string source)
         {
             if (source == null)
             {
@@ -125,7 +125,7 @@ namespace Rekommend_BackEnd.Extensions
             }
         }
 
-        public static Seniority toSeniority(this string source)
+        public static Seniority ToSeniority(this string source)
         {
             if (source == null)
             {
@@ -146,6 +146,28 @@ namespace Rekommend_BackEnd.Extensions
                     return Seniority.Executive;
                 default:
                     return Seniority.Undefined;
+            }
+        }
+
+        public static RecruiterPosition ToRecruiterPosition(this string source)
+        {
+            if(source == null)
+            {
+                return RecruiterPosition.Undefined;
+            }
+
+            switch(source.ToLower())
+            {
+                case "undefined":
+                    return RecruiterPosition.Undefined;
+                case "founder":
+                    return RecruiterPosition.Founder;
+                case "talentacquisitionmanager":
+                    return RecruiterPosition.TalentAcquisitionManager;
+                case "other":
+                    return RecruiterPosition.Other;
+                default:
+                    return RecruiterPosition.Undefined;
             }
         }
     }

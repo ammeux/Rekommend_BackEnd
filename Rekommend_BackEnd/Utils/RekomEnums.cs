@@ -77,13 +77,6 @@
             Other
         }
 
-        public enum City
-        {
-            Undefined,
-            Paris,
-            Other
-        }
-
         public enum Country
         {
             Undefined,
@@ -98,6 +91,11 @@
             Current
         }
 
-
+        public enum Gender
+        {
+            Undefined,
+            Female,
+            Male
+        }
     }
 }
