@@ -28,6 +28,8 @@ namespace Rekommend_BackEnd.Models
         [Required]
         public string City { get; set; }
         [Required]
+        public int PostCode { get; set; }
+        [Required]
         public string Country { get; set; }
         [MaxLength(50)]
         public string Reward1 { get; set; }

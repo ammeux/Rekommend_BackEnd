@@ -17,6 +17,10 @@ namespace Rekommend_BackEnd.Entities
         public Rekommender Rekommender { get; set; }
         [Required]
         public Guid RekommenderId { get; set; }
+        [ForeignKey("TechJobOpeningId")]
+        public TechJobOpening TechJobOpening { get; set; }
+        [Required]
+        public Guid TechJobOpeningId { get; set; }
         [Required]
         [MaxLength(50)]
         public string FirstName { get; set; }
@@ -38,5 +42,9 @@ namespace Rekommend_BackEnd.Entities
         public string Comment { get; set; }
         [Required]
         public RekommendationStatus Status { get; set; }
+        [Required]
+        public bool HasAlreadyWorkedWithRekommender { get; set; }
+        [Required]
+        public int Grade { get; set; }
     }
 }

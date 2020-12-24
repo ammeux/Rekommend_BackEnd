@@ -10,7 +10,7 @@ namespace Rekommend_BackEnd.Models
         public string LastName { get; set; }
         public Guid CompanyId { get; set; }
         public string Position { get; set; }
-        public DateTimeOffset DateOfBirth { get; set; }
+        public int Age { get; set; }
         public string Email { get; set; }
         public string Gender { get; set; }
     }

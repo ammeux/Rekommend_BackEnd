@@ -63,7 +63,7 @@ namespace Rekommend_BackEnd.Controllers
                 LastName = recruiterFromRepo.LastName,
                 CompanyId = recruiterFromRepo.CompanyId,
                 Position = recruiterFromRepo.Position.ToString(),
-                DateOfBirth = recruiterFromRepo.DateOfBirth,
+                Age = recruiterFromRepo.DateOfBirth.GetCurrentAge(),
                 Email = recruiterFromRepo.Email,
                 Gender = recruiterFromRepo.Gender.ToString()
             };
@@ -71,6 +71,8 @@ namespace Rekommend_BackEnd.Controllers
             return Ok(recruiterDto);
         }
 
+        [HttpGet(Name = "GetRecruiters")]
+        [HttpHead(Name = "GetRecruiters")]
         public IActionResult GetRecruiters([FromQuery] RecruitersResourceParameters recruitersResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
@@ -81,7 +83,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(recruitersResourceParameters.Fields))
             {
-                _logger.LogInformation($"Property checker did not find on of the resource parameters fields");
+                _logger.LogInformation($"Property checker did not find on of the Recruiter resource parameters fields");
                 return BadRequest();
             }
 
@@ -119,7 +121,7 @@ namespace Rekommend_BackEnd.Controllers
                     LastName = recruiter.LastName,
                     CompanyId = recruiter.CompanyId,
                     Position = recruiter.Position.ToString(),
-                    DateOfBirth = recruiter.DateOfBirth,
+                    Age = recruiter.DateOfBirth.GetCurrentAge(),
                     Email = recruiter.Email,
                     Gender = recruiter.Gender.ToString()
                 });
@@ -157,7 +159,7 @@ namespace Rekommend_BackEnd.Controllers
         public ActionResult<RecruiterDto> CreateRecruiter(RecruiterForCreationDto recruiterForCreationDto)
         {
             // A modifier lors de l'implementation de l'authentification
-            Guid companyId = Guid.Parse("aaaef973-d8ce-4c92-95b4-3635bb2d42d0");
+            Guid companyId = Guid.Parse("e0de73e1-3873-496a-ad69-37334f6f58f3");
 
             var recruiter = new Recruiter
             {
@@ -337,8 +339,6 @@ namespace Rekommend_BackEnd.Controllers
                             pageNumber = recruitersResourceParameters.PageNumber - 1,
                             pageSize = recruitersResourceParameters.PageSize,
                             recruiterPosition = recruitersResourceParameters.RecruiterPosition,
-                            firstName = recruitersResourceParameters.FirstName,
-                            lastName = recruitersResourceParameters.LastName,
                             companyId = recruitersResourceParameters.CompanyId,
                             orderBy = recruitersResourceParameters.OrderBy
                         }) ;
@@ -350,8 +350,6 @@ namespace Rekommend_BackEnd.Controllers
                             pageNumber = recruitersResourceParameters.PageNumber + 1,
                             pageSize = recruitersResourceParameters.PageSize,
                             recruiterPosition = recruitersResourceParameters.RecruiterPosition,
-                            firstName = recruitersResourceParameters.FirstName,
-                            lastName = recruitersResourceParameters.LastName,
                             companyId = recruitersResourceParameters.CompanyId,
                             orderBy = recruitersResourceParameters.OrderBy
                         });
@@ -364,8 +362,6 @@ namespace Rekommend_BackEnd.Controllers
                             pageNumber = recruitersResourceParameters.PageNumber,
                             pageSize = recruitersResourceParameters.PageSize,
                             recruiterPosition = recruitersResourceParameters.RecruiterPosition,
-                            firstName = recruitersResourceParameters.FirstName,
-                            lastName = recruitersResourceParameters.LastName,
                             companyId = recruitersResourceParameters.CompanyId,
                             orderBy = recruitersResourceParameters.OrderBy
                         });

@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20201223124404_ShouldNotAddMigration.cs" />
+    <Compile Remove="Migrations\20201223124404_ShouldNotAddMigration.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.9" />
@@ -19,7 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Models\Rekommender\" />
-    <Folder Include="Models\Rekommendation\" />
   </ItemGroup>
 
 

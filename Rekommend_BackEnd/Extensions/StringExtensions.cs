@@ -97,7 +97,7 @@ namespace Rekommend_BackEnd.Extensions
             }
         }
 
-        public static Position ToJobPosition(this string source)
+        public static Position ToPosition(this string source)
         {
             if (source == null)
             {
@@ -168,6 +168,34 @@ namespace Rekommend_BackEnd.Extensions
                     return RecruiterPosition.Other;
                 default:
                     return RecruiterPosition.Undefined;
+            }
+        }
+
+        public static RekommendationStatus ToRekommendationStatus(this string source)
+        {
+            if(source == null)
+            {
+                return RekommendationStatus.Undefined;
+            }
+
+            switch(source.ToLower())
+            {
+                case "undefined":
+                    return RekommendationStatus.Undefined;
+                case "notviewed":
+                    return RekommendationStatus.NotViewed;
+                case "viewed":
+                    return RekommendationStatus.Viewed;
+                case "emailtobeverified":
+                    return RekommendationStatus.EmailToBeVerified;
+                case "selected":
+                    return RekommendationStatus.Selected;
+                case "accepted":
+                    return RekommendationStatus.Accepted;
+                case "rejected":
+                    return RekommendationStatus.Rejected;
+                default:
+                    return RekommendationStatus.Undefined;
             }
         }
     }

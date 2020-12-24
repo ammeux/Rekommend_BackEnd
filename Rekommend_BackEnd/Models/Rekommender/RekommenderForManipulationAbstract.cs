@@ -1,17 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using static Rekommend_BackEnd.Utils.RekomEnums;
 
-namespace Rekommend_BackEnd.Entities
+namespace Rekommend_BackEnd.Models
 {
-    public class Rekommender
+    public abstract class RekommenderForManipulationAbstract
     {
-        [Key]
-        public Guid Id { get; set; }
         [Required]
         public DateTimeOffset DateOfBirth { get; set; }
-        [Required]
-        public DateTimeOffset RegistrationDate { get; set; }
         [Required]
         [MaxLength(50)]
         public string FirstName { get; set; }
@@ -19,9 +14,9 @@ namespace Rekommend_BackEnd.Entities
         [MaxLength(50)]
         public string LastName { get; set; }
         [Required]
-        public Position Position { get; set; }
+        public string Position { get; set; }
         [Required]
-        public Seniority Seniority { get; set; }
+        public string Seniority { get; set; }
         [Required]
         [MaxLength(50)]
         public string Company { get; set; }
@@ -33,9 +28,5 @@ namespace Rekommend_BackEnd.Entities
         public string Email { get; set; }
         [Required]
         public int PostCode { get; set; }
-        [Required]
-        public int XpRekommend { get; set; }
-        [Required]
-        public int RekommendationsAvgGrade { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace Rekommend_BackEnd.Repositories
         {
             if(techJobOpeningsResourceParameters == null)
             {
-                throw new ArgumentNullException(nameof(TechJobOpeningsResourceParameters));
+                throw new ArgumentNullException(nameof(techJobOpeningsResourceParameters));
             }
 
             var collection = _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company) as IQueryable<TechJobOpening>;
@@ -53,6 +53,12 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.Where(a => a.City == city);
             }
 
+            var postCode = techJobOpeningsResourceParameters.PostCode;
+            if(Math.Floor(Math.Log10(postCode) + 1) == 5)
+            {
+                collection = collection.Where(a => a.PostCode == postCode);
+            }
+
             if(techJobOpeningsResourceParameters.RemoteWorkAccepted == true)
             {
                 collection = collection.Where(a => a.RemoteWorkAccepted == true);
@@ -64,7 +70,7 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.Where(a => a.ContractType == contractType);
             }
 
-            var jobPosition = techJobOpeningsResourceParameters.JobPosition.ToJobPosition();
+            var jobPosition = techJobOpeningsResourceParameters.JobPosition.ToPosition();
             if(jobPosition != Position.Undefined)
             {
                 collection = collection.Where(a => a.JobPosition == jobPosition);
@@ -107,7 +113,7 @@ namespace Rekommend_BackEnd.Repositories
         {
             if (recruitersResourceParameters == null)
             {
-                throw new ArgumentNullException(nameof(RecruitersResourceParameters));
+                throw new ArgumentNullException(nameof(recruitersResourceParameters));
             }
 
             var collection = _context.Recruiters as IQueryable<Recruiter>;
@@ -116,18 +122,6 @@ namespace Rekommend_BackEnd.Repositories
             if(recruiterPosition != RecruiterPosition.Undefined)
             {
                 collection = collection.Where(a => a.Position == recruiterPosition);
-            }
-
-            var firstName = recruitersResourceParameters.FirstName;
-            if(firstName != null)
-            {
-                collection = collection.Where(a => a.FirstName == firstName);
-            }
-
-            var lastName = recruitersResourceParameters.LastName;
-            if (lastName != null)
-            {
-                collection = collection.Where(a => a.LastName == lastName);
             }
 
             var companyId = recruitersResourceParameters.CompanyId;
@@ -167,7 +161,7 @@ namespace Rekommend_BackEnd.Repositories
         {
             if (companiesResourceParameters == null)
             {
-                throw new ArgumentNullException(nameof(CompaniesResourceParameters));
+                throw new ArgumentNullException(nameof(companiesResourceParameters));
             }
 
             var collection = _context.Companies as IQueryable<Company>;
@@ -237,6 +231,11 @@ namespace Rekommend_BackEnd.Repositories
             _context.Recruiters.Add(recruiter);
         }
 
+        public Company GetCompany(Guid companyId)
+        {
+            return _context.Companies.FirstOrDefault(a => a.Id == companyId);
+        }
+
         public void AddCompany(Company company)
         {
             if (company == null)
@@ -247,11 +246,6 @@ namespace Rekommend_BackEnd.Repositories
             company.Id = Guid.NewGuid();
             company.RegistrationDate = DateTimeOffset.Now;
             _context.Companies.Add(company);
-        }
-
-        public Company GetCompany(Guid companyId)
-        {
-            return _context.Companies.FirstOrDefault(a => a.Id == companyId);
         }
 
         public TechJobOpening GetTechJobOpening(Guid techJobOpeningId)
@@ -282,6 +276,202 @@ namespace Rekommend_BackEnd.Repositories
             _context.TechJobOpenings.Add(techJobOpening);
         }
 
+        public Rekommendation GetRekommendation(Guid rekommendationId)
+        {
+            return _context.Rekommendations.Include(d => d.Rekommender).Include(d => d.TechJobOpening).FirstOrDefault(a => a.Id == rekommendationId);
+        }
+
+        public PagedList<Rekommendation> GetRekommendations(RekommendationsResourceParameters rekommendationsResourceParameters)
+        {
+            if (rekommendationsResourceParameters == null)
+            {
+                throw new ArgumentNullException(nameof(rekommendationsResourceParameters));
+            }
+
+            var collection = _context.Rekommendations.Include(d=>d.Rekommender).Include(d=>d.TechJobOpening) as IQueryable<Rekommendation>;
+
+            var techJobOpeningId = rekommendationsResourceParameters.TechJobOpeningId;
+            if (techJobOpeningId != null)
+            {
+                collection = collection.Where(a => a.TechJobOpening.Id.ToString() == techJobOpeningId);
+            }
+
+            var position = rekommendationsResourceParameters.Position;
+            if (position != null)
+            {
+                collection = collection.Where(a => a.Position.ToString() == position);
+            }
+
+            var seniority = rekommendationsResourceParameters.Seniority;
+            if (seniority != null)
+            {
+                collection = collection.Where(a => a.Seniority.ToString() == seniority);
+            }
+
+            var rekommendationStatus = rekommendationsResourceParameters.Status;
+            if (rekommendationStatus != null)
+            {
+                collection = collection.Where(a => a.Status.ToString() == rekommendationStatus);
+            }
+
+            var hasAlreadyWorkedWithRekommender = rekommendationsResourceParameters.HasAlreadyWorkedWithRekommender;
+            if(hasAlreadyWorkedWithRekommender == true)
+            {
+                collection = collection.Where(a => a.HasAlreadyWorkedWithRekommender);
+            }
+
+            if (!string.IsNullOrWhiteSpace(rekommendationsResourceParameters.SearchQuery))
+            {
+                var searchQuery = rekommendationsResourceParameters.SearchQuery.Trim();
+                collection = collection.Where(a => a.LastName.ToLower().Contains(searchQuery.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(rekommendationsResourceParameters.OrderBy))
+            {
+                // get property mapping dictionary
+                var rekommendationMappingDictionary = _propertyMappingService.GetPropertyMapping<RekommendationDto, Rekommendation>();
+
+                collection = collection.ApplySort(rekommendationsResourceParameters.OrderBy, rekommendationMappingDictionary);
+            }
+
+            return PagedList<Rekommendation>.Create(collection, rekommendationsResourceParameters.PageNumber, rekommendationsResourceParameters.PageSize);
+        }
+
+        public void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation)
+        {
+            if (rekommendation == null)
+            {
+                throw new ArgumentNullException(nameof(rekommendation));
+            }
+
+            rekommendation.Id = Guid.NewGuid();
+            rekommendation.CreationDate = DateTimeOffset.Now;
+            rekommendation.StatusChangeDate = DateTimeOffset.Now;
+            rekommendation.RekommenderId = rekommenderId;
+            rekommendation.Status = RekommendationStatus.EmailToBeVerified;
+            rekommendation.Grade = -1;
+
+            _context.Rekommendations.Add(rekommendation);
+        }
+
+        public void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId)
+        {
+            var rekommender = _context.Rekommenders.FirstOrDefault(a => a.Id == rekommenderId);
+            if (rekommender != null)
+            {
+                IEnumerable<Rekommendation> rekommendationsList = _context.Rekommendations.Where(a => a.RekommenderId == rekommenderId)
+                    .Where(a => a.Status != RekommendationStatus.EmailToBeVerified);
+                int totalRekoGrade = 0;
+                int rekommenderXp = 0;
+                int rekommendationsCount = 0;
+                foreach(Rekommendation rekommendation in rekommendationsList)
+                {
+                    if (rekommendation.Grade != -1)
+                    {
+                        totalRekoGrade += rekommendation.Grade;
+                        rekommendationsCount++;
+                    }
+                        switch (rekommendation.Status)
+                    {
+                        case RekommendationStatus.NotViewed:
+                        case RekommendationStatus.Viewed:
+                            rekommenderXp += 2;
+                            break;
+                        case RekommendationStatus.Selected:
+                            rekommenderXp += 8;
+                            break;
+                        case RekommendationStatus.Accepted:
+                            rekommenderXp += 20;
+                            break;
+                        case RekommendationStatus.Rejected:
+                        case RekommendationStatus.Undefined:
+                        default:
+                            rekommenderXp += 0;
+                            break;
+                    }
+                }
+                rekommender.XpRekommend = rekommenderXp;
+                var avgRekoGrade = (double)totalRekoGrade / rekommendationsCount;
+                rekommender.RekommendationsAvgGrade = (int) Math.Round(avgRekoGrade, MidpointRounding.AwayFromZero);
+            }
+        }
+
+        public Rekommender GetRekommender(Guid rekommenderId)
+        {
+            return _context.Rekommenders.FirstOrDefault(a => a.Id == rekommenderId);
+        }
+
+        public PagedList<Rekommender> GetRekommenders(RekommendersResourceParameters rekommendersResourceParameters)
+        {
+            if (rekommendersResourceParameters == null)
+            {
+                throw new ArgumentNullException(nameof(rekommendersResourceParameters));
+            }
+
+            var collection = _context.Rekommenders as IQueryable<Rekommender>;
+
+            var position = rekommendersResourceParameters.Position;
+            if (position != null)
+            {
+                collection = collection.Where(a => a.Position.ToString() == position);
+            }
+
+            var seniority = rekommendersResourceParameters.Seniority;
+            if (seniority != null)
+            {
+                collection = collection.Where(a => a.Seniority.ToString() == seniority);
+            }
+
+            var company = rekommendersResourceParameters.Company;
+            if (company != null)
+            {
+                collection = collection.Where(a => a.Company == company);
+            }
+
+            var xpRekommend = rekommendersResourceParameters.XpRekommend;
+            if (xpRekommend > 0)
+            {
+                collection = collection.Where(a => a.XpRekommend > xpRekommend);
+            }
+
+            var rekommendationsAvgGrade = rekommendersResourceParameters.RekommendationsAvgGrade;
+            if (rekommendationsAvgGrade > 0)
+            {
+                collection = collection.Where(a => a.RekommendationsAvgGrade > rekommendationsAvgGrade);
+            }
+
+            if (!string.IsNullOrWhiteSpace(rekommendersResourceParameters.SearchQuery))
+            {
+                var searchQuery = rekommendersResourceParameters.SearchQuery.Trim();
+                collection = collection.Where(a => a.LastName.ToLower().Contains(searchQuery.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(rekommendersResourceParameters.OrderBy))
+            {
+                // get property mapping dictionary
+                var rekommenderMappingDictionary = _propertyMappingService.GetPropertyMapping<RekommenderDto, Rekommender>();
+
+                collection = collection.ApplySort(rekommendersResourceParameters.OrderBy, rekommenderMappingDictionary);
+            }
+
+            return PagedList<Rekommender>.Create(collection, rekommendersResourceParameters.PageNumber, rekommendersResourceParameters.PageSize);
+        }
+
+        public void AddRekommender(Rekommender rekommender)
+        {
+            if (rekommender == null)
+            {
+                throw new ArgumentNullException(nameof(Rekommender));
+            }
+
+            rekommender.Id = Guid.NewGuid();
+            rekommender.RegistrationDate = DateTimeOffset.Now;
+            rekommender.RekommendationsAvgGrade = 0;
+            rekommender.XpRekommend = 0;
+
+            _context.Rekommenders.Add(rekommender);
+        }
+
         public void UpdateTechJobOpening(TechJobOpening techJobOpening)
         {
             // No code necessary in this implementation
@@ -293,6 +483,16 @@ namespace Rekommend_BackEnd.Repositories
         }
 
         public void UpdateCompany(Company company)
+        {
+            // No code necessary in this implementation
+        }
+
+        public void UpdateRekommendation(Rekommendation rekommendation)
+        {
+            // No code necessary in this implementation
+        }
+
+        public void UpdateRekommender(Rekommender rekommender)
         {
             // No code necessary in this implementation
         }
@@ -320,6 +520,26 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             _context.Companies.Remove(company);
+        }
+
+        public void DeleteRekommendation(Rekommendation rekommendation)
+        {
+            if (rekommendation == null)
+            {
+                throw new ArgumentNullException(nameof(rekommendation));
+            }
+
+            _context.Rekommendations.Remove(rekommendation);
+        }
+
+        public void DeleteRekommender(Rekommender rekommender)
+        {
+            if (rekommender == null)
+            {
+                throw new ArgumentNullException(nameof(rekommender));
+            }
+
+            _context.Rekommenders.Remove(rekommender);
         }
 
         public bool Save()

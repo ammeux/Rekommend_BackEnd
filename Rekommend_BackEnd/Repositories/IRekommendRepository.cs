@@ -29,6 +29,21 @@ namespace Rekommend_BackEnd.Repositories
         void UpdateCompany(Company company);
         void DeleteCompany(Company company);
 
+        // Rekommendation
+        Rekommendation GetRekommendation(Guid rekommendationId);
+        PagedList<Rekommendation> GetRekommendations(RekommendationsResourceParameters rekommendationsResourceParameters);
+        void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation);
+        void UpdateRekommendation(Rekommendation rekommendation);
+        void DeleteRekommendation(Rekommendation rekommendation);
+
+        // Rekommender
+        Rekommender GetRekommender(Guid RekommenderId);
+        void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId);
+        PagedList<Rekommender> GetRekommenders(RekommendersResourceParameters rekommendersResourceParameters);
+        void AddRekommender(Rekommender rekommender);
+        void UpdateRekommender(Rekommender rekommender);
+        void DeleteRekommender(Rekommender rekommender);
+
         bool Save();
     }
 }

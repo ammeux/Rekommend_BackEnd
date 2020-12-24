@@ -48,11 +48,49 @@ namespace Rekommend_BackEnd.Services
                 {"PostCode", new PropertyMappingValue(new List<string>(){"PostCode"}) },
             };
 
+        private Dictionary<string, PropertyMappingValue> _rekommendationPropertyMapping =
+            new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
+                {"CreationDate", new PropertyMappingValue(new List<string>() {"CreationDate" })},
+                {"Rekommender", new PropertyMappingValue(new List<string>(){"Rekommender"}) },
+                {"TechJobOpening", new PropertyMappingValue(new List<string>() {"TechJobOpening" }) },
+                {"FirstName", new PropertyMappingValue(new List<string>(){"FirstName"}) },
+                {"LastName", new PropertyMappingValue(new List<string>(){"LastName"}) },
+                {"Position", new PropertyMappingValue(new List<string>(){"Position"}) },
+                {"Seniority", new PropertyMappingValue(new List<string>(){"Seniority"}) },
+                {"Company", new PropertyMappingValue(new List<string>(){"Company"}) },
+                {"Email", new PropertyMappingValue(new List<string>(){"Email"}) },
+                {"Comment", new PropertyMappingValue(new List<string>(){"Comment"}) },
+                {"Status", new PropertyMappingValue(new List<string>(){"Status"}) },
+                {"HasAlreadyWorkedWithRekommender", new PropertyMappingValue(new List<string>(){"HasAlreadyWorkedWithRekommender" }) }
+            };
+
+        private Dictionary<string, PropertyMappingValue> _rekommenderPropertyMapping =
+            new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
+                {"RegistrationDate", new PropertyMappingValue(new List<string>() {"RegistrationDate" })},
+                {"DateOfBirth", new PropertyMappingValue(new List<string>(){"Age"}) },
+                {"FirstName", new PropertyMappingValue(new List<string>(){"FirstName"}) },
+                {"LastName", new PropertyMappingValue(new List<string>(){"LastName"}) },
+                {"Position", new PropertyMappingValue(new List<string>(){"Position"}) },
+                {"Seniority", new PropertyMappingValue(new List<string>(){"Seniority"}) },
+                {"Company", new PropertyMappingValue(new List<string>(){"Company"}) },
+                {"Email", new PropertyMappingValue(new List<string>(){"Email"}) },
+                {"City", new PropertyMappingValue(new List<string>(){"City"}) },
+                {"PostCode", new PropertyMappingValue(new List<string>(){"PostCode"}) },
+                {"XpRekommend", new PropertyMappingValue(new List<string>(){"XpRekommend" }) },
+                {"RekommendationsAvgGrade", new PropertyMappingValue(new List<string>(){"RekommendationsAvgGrade" }) }
+            };
+
         public PropertyMappingService()
         {
             _propertyMappings.Add(new PropertyMapping<TechJobOpeningDto, TechJobOpening>(_techJobOpeningPropertyMapping));
             _propertyMappings.Add(new PropertyMapping<RecruiterDto, Recruiter>(_recruiterPropertyMapping));
             _propertyMappings.Add(new PropertyMapping<CompanyDto, Company>(_companyPropertyMapping));
+            _propertyMappings.Add(new PropertyMapping<RekommendationDto, Rekommendation>(_rekommendationPropertyMapping));
+            _propertyMappings.Add(new PropertyMapping<RekommenderDto, Rekommender>(_rekommenderPropertyMapping));
         }
 
         public bool ValidMappingExistsFor<TSource, TDestination>(string fields)

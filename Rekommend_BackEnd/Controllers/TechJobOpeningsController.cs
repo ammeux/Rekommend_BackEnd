@@ -104,7 +104,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (!_propertyCheckerService.TypeHasProperties<TechJobOpeningDto>(techJobOpeningsResourceParameters.Fields))
             {
-                _logger.LogInformation($"Property checker did not find on of the resource parameters fields");
+                _logger.LogInformation($"Property checker did not find on of the TechJobOpening resource parameters fields");
                 return BadRequest();
             }
 
@@ -202,7 +202,7 @@ namespace Rekommend_BackEnd.Controllers
         public ActionResult<TechJobOpeningDto> CreateTechJobOpening(TechJobOpeningForCreationDto techJobOpeningForCreationDto)
         {
             // A modifier lors de l'implementation de l'authentification
-            Guid recruiterId = Guid.Parse("aaaef973-d8ce-4c92-95b4-3635bb2d42d1");
+            Guid recruiterId = Guid.Parse("40acecde-ba0f-4936-9f70-a4ef44d65ed9");
             if (!_repository.IsAuthorizedToPublish(recruiterId))
             {
                 _logger.LogInformation($"Recruiter [{recruiterId}] is not authorised to publish");
@@ -214,12 +214,13 @@ namespace Rekommend_BackEnd.Controllers
                 StartingDate = techJobOpeningForCreationDto.StartingDate,
                 Title = techJobOpeningForCreationDto.Title,
                 JobTechLanguage = techJobOpeningForCreationDto.JobTechLanguage.ToJobTechLanguage(),
-                JobPosition = techJobOpeningForCreationDto.JobPosition.ToJobPosition(),
+                JobPosition = techJobOpeningForCreationDto.JobPosition.ToPosition(),
                 Seniority = techJobOpeningForCreationDto.Seniority.ToSeniority(),
                 ContractType = techJobOpeningForCreationDto.ContractType.ToContractType(),
                 RemoteWorkAccepted = techJobOpeningForCreationDto.RemoteWorkAccepted,
                 MissionDescription = techJobOpeningForCreationDto.MissionDescription,
                 City = techJobOpeningForCreationDto.City,
+                PostCode = techJobOpeningForCreationDto.PostCode,
                 Country = techJobOpeningForCreationDto.Country.ToCountry(),
                 MinimumSalary = techJobOpeningForCreationDto.MinimumSalary,
                 MaximumSalary = techJobOpeningForCreationDto.MaximumSalary
@@ -275,12 +276,13 @@ namespace Rekommend_BackEnd.Controllers
             techJobOpeningFromRepo.StartingDate = techJobOpeningUpdate.StartingDate;
             techJobOpeningFromRepo.Title = techJobOpeningUpdate.Title;
             techJobOpeningFromRepo.JobTechLanguage = techJobOpeningUpdate.JobTechLanguage.ToJobTechLanguage();
-            techJobOpeningFromRepo.JobPosition = techJobOpeningUpdate.JobPosition.ToJobPosition();
+            techJobOpeningFromRepo.JobPosition = techJobOpeningUpdate.JobPosition.ToPosition();
             techJobOpeningFromRepo.Seniority = techJobOpeningUpdate.Seniority.ToSeniority();
             techJobOpeningFromRepo.ContractType = techJobOpeningUpdate.ContractType.ToContractType();
             techJobOpeningFromRepo.RemoteWorkAccepted = techJobOpeningUpdate.RemoteWorkAccepted;
             techJobOpeningFromRepo.MissionDescription = techJobOpeningUpdate.MissionDescription;
             techJobOpeningFromRepo.City = techJobOpeningUpdate.City;
+            techJobOpeningFromRepo.PostCode = techJobOpeningUpdate.PostCode;
             techJobOpeningFromRepo.Country = techJobOpeningUpdate.Country.ToCountry();
             techJobOpeningFromRepo.MinimumSalary = techJobOpeningUpdate.MinimumSalary;
             techJobOpeningFromRepo.MaximumSalary = techJobOpeningUpdate.MaximumSalary;
@@ -319,6 +321,7 @@ namespace Rekommend_BackEnd.Controllers
                 RemoteWorkAccepted = techJobOpeningFromRepo.RemoteWorkAccepted,
                 MissionDescription = techJobOpeningFromRepo.MissionDescription,
                 City = techJobOpeningFromRepo.City.ToString(),
+                PostCode = techJobOpeningFromRepo.PostCode,
                 Country = techJobOpeningFromRepo.Country.ToString(),
                 MinimumSalary = techJobOpeningFromRepo.MinimumSalary,
                 MaximumSalary = techJobOpeningFromRepo.MaximumSalary,
@@ -339,12 +342,13 @@ namespace Rekommend_BackEnd.Controllers
             techJobOpeningFromRepo.StartingDate = techJobOpeningToPatch.StartingDate;
             techJobOpeningFromRepo.Title = techJobOpeningToPatch.Title;
             techJobOpeningFromRepo.JobTechLanguage = techJobOpeningToPatch.JobTechLanguage.ToJobTechLanguage();
-            techJobOpeningFromRepo.JobPosition = techJobOpeningToPatch.JobPosition.ToJobPosition();
+            techJobOpeningFromRepo.JobPosition = techJobOpeningToPatch.JobPosition.ToPosition();
             techJobOpeningFromRepo.Seniority = techJobOpeningToPatch.Seniority.ToSeniority();
             techJobOpeningFromRepo.ContractType = techJobOpeningToPatch.ContractType.ToContractType();
             techJobOpeningFromRepo.RemoteWorkAccepted = techJobOpeningToPatch.RemoteWorkAccepted;
             techJobOpeningFromRepo.MissionDescription = techJobOpeningToPatch.MissionDescription;
             techJobOpeningFromRepo.City = techJobOpeningToPatch.City;
+            techJobOpeningFromRepo.PostCode = techJobOpeningToPatch.PostCode;
             techJobOpeningFromRepo.Country = techJobOpeningToPatch.Country.ToCountry();
             techJobOpeningFromRepo.MinimumSalary = techJobOpeningToPatch.MinimumSalary;
             techJobOpeningFromRepo.MaximumSalary = techJobOpeningToPatch.MaximumSalary;

@@ -4,7 +4,7 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Models
 {
-    public class RecruiterForManipulationAbstract
+    public abstract class RecruiterForManipulationAbstract
     {
         [Required]
         [MaxLength(50)]

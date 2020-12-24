@@ -15,5 +15,6 @@ namespace Rekommend_BackEnd.Models
         public string Category { get; set; }
         public string logoFileName { get; set; }
         public string Website { get; set; }
+        public string EmployerBrandWebsite { get; set; }
     }
 }

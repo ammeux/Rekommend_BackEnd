@@ -31,6 +31,8 @@ namespace Rekommend_BackEnd.Entities
         [Required]
         [MaxLength(50)]
         public string Website { get; set; }
+        [MaxLength(50)]
+        public string EmployerBrandWebsite { get; set; }
         [Required]
         public int PostCode { get; set; }
     }

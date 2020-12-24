@@ -17,6 +17,10 @@ namespace Rekommend_BackEnd.Entities
         public Rekommendation Rekommendation { get; set; }
         [Required]
         public Guid RekommendationId { get; set; }
+        [ForeignKey("TechJobOpeningId")]
+        public TechJobOpening TechJobOpeing { get; set; }
+        [Required]
+        public Guid TechJobOpeningId { get; set; }
         [Required]
         public DateTimeOffset Date { get; set; }
         [Required]

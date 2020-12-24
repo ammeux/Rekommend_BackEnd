@@ -66,12 +66,15 @@ namespace Rekommend_BackEnd.Controllers
                 CompanyDescription = companyFromRepo.CompanyDescription,
                 Category = companyFromRepo.Category.ToString(),
                 logoFileName = companyFromRepo.LogoFileName,
-                Website = companyFromRepo.Website
+                Website = companyFromRepo.Website,
+                EmployerBrandWebsite = companyFromRepo.EmployerBrandWebsite
             };
 
             return Ok(companyDto);
         }
 
+        [HttpGet(Name = "GetCompanies")]
+        [HttpHead(Name = "GetCompanies")]
         public IActionResult GetCompanies([FromQuery] CompaniesResourceParameters companiesResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
@@ -82,7 +85,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (!_propertyCheckerService.TypeHasProperties<CompanyDto>(companiesResourceParameters.Fields))
             {
-                _logger.LogInformation($"Property checker did not find on of the resource parameters fields");
+                _logger.LogInformation($"Property checker did not find on of the Company resource parameters fields");
                 return BadRequest();
             }
 
@@ -123,7 +126,8 @@ namespace Rekommend_BackEnd.Controllers
                     CompanyDescription = company.CompanyDescription,
                     Category = company.Category.ToString(),
                     logoFileName = company.LogoFileName,
-                    Website = company.Website
+                    Website = company.Website,
+                    EmployerBrandWebsite = company.EmployerBrandWebsite
                 });
             }
 
@@ -133,11 +137,11 @@ namespace Rekommend_BackEnd.Controllers
 
             if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
-                var shapedCompaniessWithLinks = shapedCompanies.Select(shapedCompanies =>
+                var shapedCompaniesWithLinks = shapedCompanies.Select(shapedCompanies =>
                 {
                     var companiesAsDictionary = companies as IDictionary<string, object>;
-                    var recruiterLinks = CreateLinksForCompany((Guid)companiesAsDictionary["Id"], null);
-                    companiesAsDictionary.Add("links", recruiterLinks);
+                    var companyLinks = CreateLinksForCompany((Guid)companiesAsDictionary["Id"], null);
+                    companiesAsDictionary.Add("links", companyLinks);
                     return companiesAsDictionary;
                 });
 
@@ -156,7 +160,7 @@ namespace Rekommend_BackEnd.Controllers
         }
 
         [HttpPost(Name = "CreateCompany")]
-        public ActionResult<CompanyDto> CreateRecruiter(CompanyForCreationDto companyForCreationDto)
+        public ActionResult<CompanyDto> CreateCompany(CompanyForCreationDto companyForCreationDto)
         {
 
             var company = new Company
@@ -168,7 +172,8 @@ namespace Rekommend_BackEnd.Controllers
                 CompanyDescription = companyForCreationDto.CompanyDescription,
                 Category = companyForCreationDto.Category.ToCompanyCategory(),
                 LogoFileName = companyForCreationDto.LogoFileName,
-                Website = companyForCreationDto.Website
+                Website = companyForCreationDto.Website,
+                EmployerBrandWebsite = companyForCreationDto.EmployerBrandWebsite
             };
 
             _repository.AddCompany(company);
@@ -199,8 +204,9 @@ namespace Rekommend_BackEnd.Controllers
             companyFromRepo.PostCode = companyUpdate.PostCode;
             companyFromRepo.CompanyDescription = companyUpdate.CompanyDescription;
             companyFromRepo.Category = companyUpdate.Category.ToCompanyCategory();
-            companyFromRepo.LogoFileName = companyFromRepo.LogoFileName;
-            companyFromRepo.Website = companyFromRepo.Website;
+            companyFromRepo.LogoFileName = companyUpdate.LogoFileName;
+            companyFromRepo.Website = companyUpdate.Website;
+            companyFromRepo.EmployerBrandWebsite = companyUpdate.EmployerBrandWebsite;
 
             // Action without any effect
             _repository.UpdateCompany(companyFromRepo);
@@ -229,7 +235,8 @@ namespace Rekommend_BackEnd.Controllers
                 CompanyDescription = companyFromRepo.CompanyDescription,
                 Category = companyFromRepo.Category.ToString(),
                 LogoFileName = companyFromRepo.LogoFileName,
-                Website = companyFromRepo.Website
+                Website = companyFromRepo.Website,
+                EmployerBrandWebsite = companyFromRepo.EmployerBrandWebsite
             };
 
             patchDocument.ApplyTo(companyToPatch, ModelState);
@@ -247,6 +254,7 @@ namespace Rekommend_BackEnd.Controllers
             companyFromRepo.Category = companyToPatch.Category.ToCompanyCategory();
             companyFromRepo.LogoFileName = companyToPatch.LogoFileName;
             companyFromRepo.Website = companyToPatch.Website;
+            companyFromRepo.EmployerBrandWebsite = companyToPatch.EmployerBrandWebsite;
 
             // Action without any effect
             _repository.UpdateCompany(companyFromRepo);

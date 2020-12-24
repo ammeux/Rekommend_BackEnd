@@ -3,7 +3,7 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Models
 {
-    public class CompanyForManipulationAbstract
+    public abstract class CompanyForManipulationAbstract
     {
         [Required]
         [MaxLength(50)]
@@ -26,6 +26,8 @@ namespace Rekommend_BackEnd.Models
         [Required]
         [MaxLength(50)]
         public string Website { get; set; }
+        [MaxLength(50)]
+        public string EmployerBrandWebsite { get; set; }
         [Required]
         public int PostCode { get; set; }
     }
