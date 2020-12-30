@@ -14,9 +14,10 @@ using Rekommend_BackEnd.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.Net.Http.Headers;
 using static Rekommend_BackEnd.Utils.RekomEnums;
+using Marvin.Cache.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -36,14 +37,21 @@ namespace Rekommend_BackEnd.Controllers
             _propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
+        [HttpCacheValidation(MustRevalidate = true)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{companyId}", Name = "GetCompany")]
         [HttpHead("{companyId}", Name = "GetCompany")]
-        public IActionResult GetCompany(Guid companyId, [FromHeader(Name = "Accept")] string mediaType)
+        public IActionResult GetCompany(Guid companyId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<CompanyDto>(fields))
+            {
                 return BadRequest();
             }
 
@@ -65,14 +73,32 @@ namespace Rekommend_BackEnd.Controllers
                 PostCode = companyFromRepo.PostCode,
                 CompanyDescription = companyFromRepo.CompanyDescription,
                 Category = companyFromRepo.Category.ToString(),
-                logoFileName = companyFromRepo.LogoFileName,
+                LogoFileName = companyFromRepo.LogoFileName,
                 Website = companyFromRepo.Website,
                 EmployerBrandWebsite = companyFromRepo.EmployerBrandWebsite
             };
 
-            return Ok(companyDto);
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
+            {
+                links = CreateLinksForCompany(companyId, fields);
+            }
+
+            var companyToReturn = companyDto.ShapeData(fields) as IDictionary<string, object>;
+
+            if (includeLinks)
+            {
+                companyToReturn.Add("links", links);
+            }
+
+            return Ok(companyToReturn);
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 60)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetCompanies")]
         [HttpHead(Name = "GetCompanies")]
         public IActionResult GetCompanies([FromQuery] CompaniesResourceParameters companiesResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
@@ -125,7 +151,7 @@ namespace Rekommend_BackEnd.Controllers
                     PostCode = company.PostCode,
                     CompanyDescription = company.CompanyDescription,
                     Category = company.Category.ToString(),
-                    logoFileName = company.LogoFileName,
+                    LogoFileName = company.LogoFileName,
                     Website = company.Website,
                     EmployerBrandWebsite = company.EmployerBrandWebsite
                 });
@@ -137,7 +163,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
-                var shapedCompaniesWithLinks = shapedCompanies.Select(shapedCompanies =>
+                var shapedCompaniesWithLinks = shapedCompanies.Select(companies =>
                 {
                     var companiesAsDictionary = companies as IDictionary<string, object>;
                     var companyLinks = CreateLinksForCompany((Guid)companiesAsDictionary["Id"], null);
@@ -147,7 +173,7 @@ namespace Rekommend_BackEnd.Controllers
 
                 var linkedCollectionResource = new
                 {
-                    value = shapedCompanies,
+                    value = shapedCompaniesWithLinks,
                     links
                 };
 
@@ -177,9 +203,30 @@ namespace Rekommend_BackEnd.Controllers
             };
 
             _repository.AddCompany(company);
+
+            var companyToReturn = new CompanyDto
+            {
+                Id = company.Id,
+                RegistrationDate = company.RegistrationDate,
+                Name = company.Name,
+                HqCity = company.HqCity,
+                HqCountry = company.HqCountry,
+                PostCode = company.PostCode,
+                CompanyDescription = company.CompanyDescription,
+                Category = company.Category.ToString(),
+                LogoFileName = company.LogoFileName,
+                Website = company.Website,
+                EmployerBrandWebsite = company.EmployerBrandWebsite
+            };
+
+            var links = CreateLinksForCompany(companyToReturn.Id, null);
+
+            var linkedResourcesToReturn = companyToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourcesToReturn.Add("links", links);
+
             if (_repository.Save())
             {
-                return CreatedAtRoute("GetCompany", new { companyId = company.Id }, company);
+                return CreatedAtRoute("GetCompany", new { companyId = linkedResourcesToReturn["Id"] }, linkedResourcesToReturn);
             }
             else
             {
@@ -334,10 +381,6 @@ namespace Rekommend_BackEnd.Controllers
                     new LinkDto(Url.Link("DeleteCompany", new { companyId }),
                     "delete_company",
                     "DELETE"));
-            links.Add(
-                    new LinkDto(Url.Link("CreateCompany", new { companyId }),
-                    "create_company",
-                    "POST"));
             return links;
         }
 

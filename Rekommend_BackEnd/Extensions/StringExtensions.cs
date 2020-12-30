@@ -180,8 +180,6 @@ namespace Rekommend_BackEnd.Extensions
 
             switch(source.ToLower())
             {
-                case "undefined":
-                    return RekommendationStatus.Undefined;
                 case "notviewed":
                     return RekommendationStatus.NotViewed;
                 case "viewed":
@@ -194,8 +192,28 @@ namespace Rekommend_BackEnd.Extensions
                     return RekommendationStatus.Accepted;
                 case "rejected":
                     return RekommendationStatus.Rejected;
+                case "undefined":
                 default:
                     return RekommendationStatus.Undefined;
+            }
+        }
+
+        public static Gender ToGender(this string source)
+        {
+            if(source == null)
+            {
+                return Gender.Undefined;
+            }
+
+            switch(source.ToLower())
+            {
+                case "Female":
+                    return Gender.Female;
+                case "Male":
+                    return Gender.Male;
+                case "undefined":
+                default:
+                    return Gender.Undefined;
             }
         }
     }

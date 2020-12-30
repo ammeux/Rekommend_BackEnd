@@ -13,7 +13,7 @@ namespace Rekommend_BackEnd.Models
         public string HqCountry { get; set; }
         public string CompanyDescription { get; set; }
         public string Category { get; set; }
-        public string logoFileName { get; set; }
+        public string LogoFileName { get; set; }
         public string Website { get; set; }
         public string EmployerBrandWebsite { get; set; }
     }

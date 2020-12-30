@@ -17,6 +17,7 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Marvin.Cache.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -37,13 +38,21 @@ namespace Rekommend_BackEnd.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
+        [HttpCacheValidation(MustRevalidate = true)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{techJobOpeningId}", Name = "GetTechJobOpening")]
         [HttpHead("{techJobOpeningId}", Name = "GetTechJobOpening")]
-        public IActionResult GetTechJobOpening(Guid techJobOpeningId, [FromHeader(Name = "Accept")] string mediaType)
+        public IActionResult GetTechJobOpening(Guid techJobOpeningId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
+            if(!_propertyCheckerService.TypeHasProperties<TechJobOpeningDto>(fields))
+            {
                 return BadRequest();
             }
 
@@ -74,6 +83,7 @@ namespace Rekommend_BackEnd.Controllers
                 RemoteWorkAccepted = techJobOpeningFromRepo.RemoteWorkAccepted,
                 MissionDescription = techJobOpeningFromRepo.MissionDescription,
                 City = techJobOpeningFromRepo.City.ToString(),
+                PostCode = techJobOpeningFromRepo.PostCode,
                 Country = techJobOpeningFromRepo.Country.ToString(),
                 Reward1 = techJobOpeningFromRepo.Reward1,
                 Reward2 = techJobOpeningFromRepo.Reward2,
@@ -88,10 +98,27 @@ namespace Rekommend_BackEnd.Controllers
                 RseDescription = techJobOpeningFromRepo.RseDescription
             };
 
-            return Ok(techJobOpeningDto);
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
+            {
+                links = CreateLinksForTechJobOpening(techJobOpeningId, fields);
+            }
+
+            var techJobOpeningToReturn = techJobOpeningDto.ShapeData(fields) as IDictionary<string, object>;
+
+            if(includeLinks)
+            {
+                techJobOpeningToReturn.Add("links", links);
+            }
+
+            return Ok(techJobOpeningToReturn);
         }
 
-        //[Produces("application/json", "application/vnd.rekom.hateoas+json")]
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 60)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetTechJobOpenings")]
         [HttpHead(Name = "GetTechJobOpenings")]
         public IActionResult GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
@@ -155,6 +182,7 @@ namespace Rekommend_BackEnd.Controllers
                     RemoteWorkAccepted = techJobOpening.RemoteWorkAccepted,
                     MissionDescription = techJobOpening.MissionDescription,
                     City = techJobOpening.City.ToString(),
+                    PostCode = techJobOpening.PostCode,
                     Country = techJobOpening.Country.ToString(),
                     Reward1 = techJobOpening.Reward1,
                     Reward2 = techJobOpening.Reward2,
@@ -179,14 +207,14 @@ namespace Rekommend_BackEnd.Controllers
                 var shapedTechJobOpeningsWithLinks = shapedTechJobOpenings.Select(techJobOpenings =>
                 {
                     var techJobOpeningAsDictionary = techJobOpenings as IDictionary<string, object>;
-                    var techJobOpeningLinks = CreateLinksForTechJobOpenings((Guid)techJobOpeningAsDictionary["Id"], null);
+                    var techJobOpeningLinks = CreateLinksForTechJobOpening((Guid)techJobOpeningAsDictionary["Id"], null);
                     techJobOpeningAsDictionary.Add("links", techJobOpeningLinks);
                     return techJobOpeningAsDictionary;
                 });
 
                 var linkedCollectionResource = new
                 {
-                    value = shapedTechJobOpenings,
+                    value = shapedTechJobOpeningsWithLinks,
                     links
                 };
 
@@ -252,9 +280,51 @@ namespace Rekommend_BackEnd.Controllers
             }
 
             _repository.AddTechJobOpening(recruiterId, techJobOpening);
+
+            Recruiter recruiter = _repository.GetRecruiter(recruiterId);
+
+            var techJobOpeningToReturn = new TechJobOpeningDto
+            {
+                Id = techJobOpening.Id,
+                CreationDate = techJobOpening.CreationDate,
+                Title = techJobOpening.Title,
+                CompanyId = recruiter.CompanyId,
+                //CompanyName = recruiter.Company.Name,
+                //CompanyCategory = recruiter.Company.Category.ToString(),
+                RecruiterId = techJobOpening.RecruiterId,
+                RecruiterFirstName = recruiter.FirstName,
+                RecruiterLastName = recruiter.LastName,
+                RecruiterPosition = recruiter.Position.ToString(),
+                JobTechLanguage = techJobOpening.JobTechLanguage.ToString(),
+                JobPosition = techJobOpening.JobPosition.ToString(),
+                Seniority = techJobOpening.Seniority.ToString(),
+                ContractType = techJobOpening.ContractType.ToString(),
+                RemoteWorkAccepted = techJobOpening.RemoteWorkAccepted,
+                MissionDescription = techJobOpening.MissionDescription,
+                City = techJobOpening.City.ToString(),
+                PostCode = techJobOpening.PostCode,
+                Country = techJobOpening.Country.ToString(),
+                Reward1 = techJobOpening.Reward1,
+                Reward2 = techJobOpening.Reward2,
+                Reward3 = techJobOpening.Reward3,
+                LikesNb = techJobOpening.LikesNb,
+                RekommendationsNb = techJobOpening.RekommendationsNb,
+                ViewsNb = techJobOpening.ViewsNb,
+                MinimumSalary = techJobOpening.MinimumSalary,
+                MaximumSalary = techJobOpening.MaximumSalary,
+                Status = techJobOpening.Status,
+                PictureFileName = techJobOpening.PictureFileName,
+                RseDescription = techJobOpening.RseDescription
+            };
+
+            var links = CreateLinksForTechJobOpening(techJobOpeningToReturn.Id, null);
+
+            var linkedResourcesToReturn = techJobOpeningToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourcesToReturn.Add("links", links);
+
             if (_repository.Save())
             {
-                return CreatedAtRoute("GetTechJobOpening", new { techJobOpeningId = techJobOpening.Id }, techJobOpening);
+                return CreatedAtRoute("GetTechJobOpening", new { techJobOpeningId = linkedResourcesToReturn["Id"] }, linkedResourcesToReturn);
             }
             else
             {
@@ -413,7 +483,7 @@ namespace Rekommend_BackEnd.Controllers
             return links;
         }
 
-        private IEnumerable<LinkDto> CreateLinksForTechJobOpenings(Guid techJobOpeningId, string fields)
+        private IEnumerable<LinkDto> CreateLinksForTechJobOpening(Guid techJobOpeningId, string fields)
         {
             var links = new List<LinkDto>();
 
@@ -435,10 +505,6 @@ namespace Rekommend_BackEnd.Controllers
                     new LinkDto(Url.Link("DeleteTechJobOpening", new { techJobOpeningId }),
                     "delete_techJobOpening",
                     "DELETE"));
-            links.Add(
-                    new LinkDto(Url.Link("CreateTechJobOpening", new { techJobOpeningId }),
-                    "create_techJobOpening",
-                    "POST"));
             return links;
         }
 

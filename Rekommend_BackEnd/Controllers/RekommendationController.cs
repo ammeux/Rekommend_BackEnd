@@ -14,9 +14,10 @@ using Rekommend_BackEnd.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using Microsoft.Net.Http.Headers;
 using System.Text.Json;
 using static Rekommend_BackEnd.Utils.RekomEnums;
+using Marvin.Cache.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -37,13 +38,21 @@ namespace Rekommend_BackEnd.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
+        [HttpCacheValidation(MustRevalidate = true)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{rekommendationId}", Name = "GetRekommendation")]
         [HttpHead("{rekommendationId}", Name = "GetRekommendation")]
-        public IActionResult GetRekommendation(Guid rekommendationId, [FromHeader(Name = "Accept")] string mediaType)
+        public IActionResult GetRekommendation(Guid rekommendationId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<RekommendationDto>(fields))
+            {
                 return BadRequest();
             }
 
@@ -82,9 +91,27 @@ namespace Rekommend_BackEnd.Controllers
                 HasAlreadyWorkedWithRekommender = rekommendationFromRepo.HasAlreadyWorkedWithRekommender
             };
 
-            return Ok(rekommendationDto);
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
+            {
+                links = CreateLinksForRekommendation(rekommendationId, fields);
+            }
+
+            var rekommendationToReturn = rekommendationDto.ShapeData(fields) as IDictionary<string, object>;
+
+            if (includeLinks)
+            {
+                rekommendationToReturn.Add("links", links);
+            }
+
+            return Ok(rekommendationToReturn);
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 60)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetRekommendations")]
         [HttpHead(Name = "GetRekommendations")]
         public IActionResult GetRekommendations([FromQuery] RekommendationsResourceParameters rekommendationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
@@ -161,7 +188,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
-                var shapedRekommendationsWithLinks = shapedRekommendations.Select(shapedRekommendations =>
+                var shapedRekommendationsWithLinks = shapedRekommendations.Select(rekommendations =>
                 {
                     var rekommendationsAsDictionary = rekommendations as IDictionary<string, object>;
                     var rekommendationLinks = CreateLinksForRekommendation((Guid)rekommendationsAsDictionary["Id"], null);
@@ -171,7 +198,7 @@ namespace Rekommend_BackEnd.Controllers
 
                 var linkedCollectionResource = new
                 {
-                    value = shapedRekommendations,
+                    value = shapedRekommendationsWithLinks,
                     links
                 };
 
@@ -208,9 +235,41 @@ namespace Rekommend_BackEnd.Controllers
 
                 _repository.AddRekommendation(rekommenderId, rekommendation);
 
+                var rekommendationToReturn = new RekommendationDto
+                {
+                    Id = rekommendation.Id,
+                    CreationDate = rekommendation.CreationDate,
+                    StatusChangeDate = rekommendation.StatusChangeDate,
+                    RekommenderId = rekommendation.RekommenderId,
+                    RekommenderFirstName = rekommendation.Rekommender.FirstName,
+                    RekommenderLastName = rekommendation.Rekommender.LastName,
+                    RekommenderPosition = rekommendation.Rekommender.Position.ToString(),
+                    RekommenderSeniority = rekommendation.Rekommender.Seniority.ToString(),
+                    RekommenderCompany = rekommendation.Rekommender.Company,
+                    RekommenderCity = rekommendation.Rekommender.City,
+                    RekommenderPostCode = rekommendation.Rekommender.PostCode,
+                    RekommenderEmail = rekommendation.Rekommender.Email,
+                    TechJobOpeningId = rekommendation.TechJobOpeningId,
+                    TechJobOpeningTitle = rekommendation.TechJobOpening.Title,
+                    FirstName = rekommendation.FirstName,
+                    LastName = rekommendation.LastName,
+                    Position = rekommendation.Position.ToString(),
+                    Seniority = rekommendation.Seniority.ToString(),
+                    Company = rekommendation.Company,
+                    Email = rekommendation.Email,
+                    Comment = rekommendation.Comment,
+                    Status = rekommendation.Status.ToString(),
+                    HasAlreadyWorkedWithRekommender = rekommendation.HasAlreadyWorkedWithRekommender
+                };
+
+                var links = CreateLinksForRekommendation(rekommendationToReturn.Id, null);
+
+                var linkedResourcesToReturn = rekommendationToReturn.ShapeData(null) as IDictionary<string, object>;
+                linkedResourcesToReturn.Add("links", links);
+
                 if (_repository.Save())
                 {
-                    return CreatedAtRoute("GetRekommendation", new { rekommendationId = rekommendation.Id }, rekommendation);
+                    return CreatedAtRoute("GetRekommendation", new { rekommendationId = linkedResourcesToReturn["Id"] }, linkedResourcesToReturn);
                 }
                 else
                 {
@@ -220,7 +279,7 @@ namespace Rekommend_BackEnd.Controllers
             }
             else
             {
-                _logger.LogInformation($"Cannon create Rekommendation as wrong techJobOpeningId [{techJobOpeningId}]");
+                _logger.LogInformation($"Cannot create Rekommendation as wrong techJobOpeningId [{techJobOpeningId}]");
                 return BadRequest();
             }
         }
@@ -413,10 +472,6 @@ namespace Rekommend_BackEnd.Controllers
                     new LinkDto(Url.Link("DeleteRekommendation", new { rekommendationId }),
                     "delete_rekommendation",
                     "DELETE"));
-            links.Add(
-                    new LinkDto(Url.Link("CreateRekommendation", new { rekommendationId }),
-                    "create_rekommendation",
-                    "POST"));
             return links;
         }
 

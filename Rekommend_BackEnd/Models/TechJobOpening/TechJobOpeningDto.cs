@@ -24,6 +24,7 @@ namespace Rekommend_BackEnd.Models
         public bool RemoteWorkAccepted { get; set; }
         public string MissionDescription { get; set; }
         public string City { get; set; }
+        public int PostCode { get; set; }
         public string Country { get; set; }
         public string Reward1 { get; set; }
         public string Reward2 { get; set; }

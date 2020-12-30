@@ -20,6 +20,6 @@ namespace Rekommend_BackEnd.Models
         [EmailAddress]
         public string Email { get; set; }
         [Required]
-        public Gender Gender { get; set; }
+        public string Gender { get; set; }
     }
 }

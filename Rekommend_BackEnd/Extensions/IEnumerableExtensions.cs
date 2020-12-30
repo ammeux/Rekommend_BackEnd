@@ -46,6 +46,11 @@ namespace Rekommend_BackEnd.Extensions
                     // add propertyInfo to list
                     propertyInfoList.Add(propertyInfo);
                 }
+                var idInfo = typeof(TSource).GetProperty("Id", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                if (!propertyInfoList.Contains(idInfo))
+                {
+                    propertyInfoList.Add(idInfo);
+                }
             }
 
             // run through the source objects

@@ -14,9 +14,10 @@ using Rekommend_BackEnd.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using Microsoft.Net.Http.Headers;
 using System.Text.Json;
 using static Rekommend_BackEnd.Utils.RekomEnums;
+using Marvin.Cache.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -37,13 +38,21 @@ namespace Rekommend_BackEnd.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
+        [HttpCacheValidation(MustRevalidate = true)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{recruiterId}", Name = "GetRecruiter")]
         [HttpHead("{recruiterId}", Name = "GetRecruiter")]
-        public IActionResult GetRecruiter(Guid recruiterId, [FromHeader(Name = "Accept")] string mediaType)
+        public IActionResult GetRecruiter(Guid recruiterId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(fields))
+            {
                 return BadRequest();
             }
 
@@ -68,9 +77,27 @@ namespace Rekommend_BackEnd.Controllers
                 Gender = recruiterFromRepo.Gender.ToString()
             };
 
-            return Ok(recruiterDto);
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
+            {
+                links = CreateLinksForRecruiter(recruiterId, fields);
+            }
+
+            var recruiterToReturn = recruiterDto.ShapeData(fields) as IDictionary<string, object>;
+
+            if (includeLinks)
+            {
+                recruiterToReturn.Add("links", links);
+            }
+
+            return Ok(recruiterToReturn);
         }
 
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 60)]
+        [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetRecruiters")]
         [HttpHead(Name = "GetRecruiters")]
         public IActionResult GetRecruiters([FromQuery] RecruitersResourceParameters recruitersResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
@@ -133,7 +160,7 @@ namespace Rekommend_BackEnd.Controllers
 
             if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
-                var shapedRecruitersWithLinks = shapedRecruiters.Select(shapedRecruiters =>
+                var shapedRecruitersWithLinks = shapedRecruiters.Select(recruiters =>
                 {
                     var recruiterAsDictionary = recruiters as IDictionary<string, object>;
                     var recruiterLinks = CreateLinksForRecruiter((Guid)recruiterAsDictionary["Id"], null);
@@ -143,7 +170,7 @@ namespace Rekommend_BackEnd.Controllers
 
                 var linkedCollectionResource = new
                 {
-                    value = shapedRecruiters,
+                    value = shapedRecruitersWithLinks,
                     links
                 };
 
@@ -168,13 +195,32 @@ namespace Rekommend_BackEnd.Controllers
                 Position = recruiterForCreationDto.Position.ToRecruiterPosition(),
                 DateOfBirth = recruiterForCreationDto.DateOfBirth,
                 Email = recruiterForCreationDto.Email,
-                Gender = recruiterForCreationDto.Gender
+                Gender = recruiterForCreationDto.Gender.ToGender()
             };
 
             _repository.AddRecruiter(companyId, recruiter);
+
+            var recruiterToReturn = new RecruiterDto
+            {
+                Id = recruiter.Id,
+                RegistrationDate = recruiter.RegistrationDate,
+                FirstName = recruiter.FirstName,
+                LastName = recruiter.LastName,
+                CompanyId = recruiter.CompanyId,
+                Position = recruiter.Position.ToString(),
+                Age = recruiter.DateOfBirth.GetCurrentAge(),
+                Email = recruiter.Email,
+                Gender = recruiter.Gender.ToString()
+            };
+
+            var links = CreateLinksForRecruiter(recruiterToReturn.Id, null);
+
+            var linkedResourcesToReturn = recruiterToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourcesToReturn.Add("links", links);
+
             if (_repository.Save())
             {
-                return CreatedAtRoute("GetRecruiter", new { recruiterId = recruiter.Id }, recruiter);
+                return CreatedAtRoute("GetRecruiter", new { recruiterId = linkedResourcesToReturn["Id"] }, linkedResourcesToReturn);
             }
             else
             {
@@ -198,7 +244,7 @@ namespace Rekommend_BackEnd.Controllers
             recruiterFromRepo.Position = recruiterUpdate.Position.ToRecruiterPosition();
             recruiterFromRepo.DateOfBirth = recruiterUpdate.DateOfBirth;
             recruiterFromRepo.Email = recruiterUpdate.Email;
-            recruiterFromRepo.Gender = recruiterUpdate.Gender;
+            recruiterFromRepo.Gender = recruiterUpdate.Gender.ToGender();
 
             // Action without any effect
             _repository.UpdateRecruiter(recruiterFromRepo);
@@ -225,7 +271,7 @@ namespace Rekommend_BackEnd.Controllers
                 Position = recruiterFromRepo.Position.ToString(),
                 DateOfBirth = recruiterFromRepo.DateOfBirth,
                 Email = recruiterFromRepo.Email,
-                Gender = recruiterFromRepo.Gender
+                Gender = recruiterFromRepo.Gender.ToString()
             };
 
             patchDocument.ApplyTo(recruiterToPatch, ModelState);
@@ -240,7 +286,7 @@ namespace Rekommend_BackEnd.Controllers
             recruiterFromRepo.Position = recruiterToPatch.Position.ToRecruiterPosition();
             recruiterFromRepo.DateOfBirth = recruiterToPatch.DateOfBirth;
             recruiterFromRepo.Email = recruiterToPatch.Email;
-            recruiterFromRepo.Gender = recruiterToPatch.Gender;
+            recruiterFromRepo.Gender = recruiterToPatch.Gender.ToGender();
 
             // Action without any effect
             _repository.UpdateRecruiter(recruiterFromRepo);
@@ -320,10 +366,6 @@ namespace Rekommend_BackEnd.Controllers
                     new LinkDto(Url.Link("DeleteRecruiter", new { recruiterId }),
                     "delete_recruiter",
                     "DELETE"));
-            links.Add(
-                    new LinkDto(Url.Link("CreateRecruiter", new { recruiterId }),
-                    "create_recruiter",
-                    "POST"));
             return links;
         }
 

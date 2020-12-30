@@ -36,6 +36,17 @@ namespace Rekommend_BackEnd
             // Add dbContext
             services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(Configuration.GetConnectionString("RekommendDbConnection")));
 
+            // Add headers to use ETags for cacheing
+            services.AddHttpCacheHeaders((expirationModelOptions) =>
+            {
+                expirationModelOptions.MaxAge = 30;
+                expirationModelOptions.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+            },
+            (validationModelOptions) =>
+            {
+                validationModelOptions.MustRevalidate = false;
+            });
+
             // Add controllers
             services.AddControllers(setupAction =>
             {
@@ -91,9 +102,6 @@ namespace Rekommend_BackEnd
             services.AddTransient<IRekommendRepository, RekommendRepository>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
-
-
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -117,6 +125,8 @@ namespace Rekommend_BackEnd
             }
 
             app.UseHttpsRedirection();
+
+            app.UseHttpCacheHeaders();
 
             app.UseRouting();
 
