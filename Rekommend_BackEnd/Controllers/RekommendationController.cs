@@ -12,12 +12,10 @@ using Rekommend_BackEnd.Repositories;
 using Rekommend_BackEnd.ResourceParameters;
 using Rekommend_BackEnd.Services;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Net.Http.Headers;
-using System.Text.Json;
 using static Rekommend_BackEnd.Utils.RekomEnums;
 using Marvin.Cache.Headers;
+using System.Threading.Tasks;
+using Rekommend_BackEnd.Filters;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -43,85 +41,34 @@ namespace Rekommend_BackEnd.Controllers
         [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{rekommendationId}", Name = "GetRekommendation")]
         [HttpHead("{rekommendationId}", Name = "GetRekommendation")]
-        public IActionResult GetRekommendation(Guid rekommendationId, string fields, [FromHeader(Name = "Accept")] string mediaType)
+        [RekommendationFilter]
+        public async Task<IActionResult> GetRekommendation(Guid rekommendationId, string fields)
         {
-            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
-            {
-                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
-                return BadRequest();
-            }
-
             if (!_propertyCheckerService.TypeHasProperties<RekommendationDto>(fields))
             {
                 return BadRequest();
             }
 
-            var rekommendationFromRepo = _repository.GetRekommendation(rekommendationId);
+            var rekommendationFromRepo = await _repository.GetRekommendationAsync(rekommendationId);
 
             if (rekommendationFromRepo == null)
             {
                 _logger.LogInformation($"Rekommendation with id [{rekommendationId}] wasn't found when GetRekommendation");
                 return NotFound();
             }
-
-            var rekommendationDto = new RekommendationDto
+            else
             {
-                Id = rekommendationFromRepo.Id,
-                CreationDate = rekommendationFromRepo.CreationDate,
-                StatusChangeDate = rekommendationFromRepo.StatusChangeDate,
-                RekommenderId = rekommendationFromRepo.RekommenderId,
-                RekommenderFirstName = rekommendationFromRepo.Rekommender.FirstName,
-                RekommenderLastName = rekommendationFromRepo.Rekommender.LastName,
-                RekommenderPosition = rekommendationFromRepo.Rekommender.Position.ToString(),
-                RekommenderSeniority = rekommendationFromRepo.Rekommender.Seniority.ToString(),
-                RekommenderCompany = rekommendationFromRepo.Rekommender.Company,
-                RekommenderCity = rekommendationFromRepo.Rekommender.City,
-                RekommenderPostCode = rekommendationFromRepo.Rekommender.PostCode,
-                RekommenderEmail = rekommendationFromRepo.Rekommender.Email,
-                TechJobOpeningId = rekommendationFromRepo.TechJobOpeningId,
-                TechJobOpeningTitle = rekommendationFromRepo.TechJobOpening.Title,
-                FirstName = rekommendationFromRepo.FirstName,
-                LastName = rekommendationFromRepo.LastName,
-                Position = rekommendationFromRepo.Position.ToString(),
-                Seniority = rekommendationFromRepo.Seniority.ToString(),
-                Company = rekommendationFromRepo.Company,
-                Email = rekommendationFromRepo.Email,
-                Comment = rekommendationFromRepo.Comment,
-                Status = rekommendationFromRepo.Status.ToString(),
-                HasAlreadyWorkedWithRekommender = rekommendationFromRepo.HasAlreadyWorkedWithRekommender
-            };
-
-            var includeLinks = parsedMediaType.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
-
-            IEnumerable<LinkDto> links = new List<LinkDto>();
-
-            if (includeLinks)
-            {
-                links = CreateLinksForRekommendation(rekommendationId, fields);
+                return Ok(rekommendationFromRepo);
             }
-
-            var rekommendationToReturn = rekommendationDto.ShapeData(fields) as IDictionary<string, object>;
-
-            if (includeLinks)
-            {
-                rekommendationToReturn.Add("links", links);
-            }
-
-            return Ok(rekommendationToReturn);
         }
 
         [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 60)]
         [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetRekommendations")]
         [HttpHead(Name = "GetRekommendations")]
-        public IActionResult GetRekommendations([FromQuery] RekommendationsResourceParameters rekommendationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
+        [RekommendationsFilter]
+        public async Task<IActionResult> GetRekommendations([FromQuery] RekommendationsResourceParameters rekommendationResourceParameters)
         {
-            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
-            {
-                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
-                return BadRequest();
-            }
-
             if (!_propertyCheckerService.TypeHasProperties<RekommendationDto>(rekommendationResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Rekommendation resource parameters fields");
@@ -134,148 +81,29 @@ namespace Rekommend_BackEnd.Controllers
                 return BadRequest();
             }
 
-            var rekommendationsFromRepo = _repository.GetRekommendations(rekommendationResourceParameters);
+            var rekommendationsFromRepo = await _repository.GetRekommendationsAsync(rekommendationResourceParameters);
 
-            var paginationMetadata = new
-            {
-                totalCount = rekommendationsFromRepo.TotalCount,
-                pageSize = rekommendationsFromRepo.PageSize,
-                currentPage = rekommendationsFromRepo.CurrentPage,
-                totalPages = rekommendationsFromRepo.TotalPages
-            };
-
-            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
-
-            var links = CreateLinksForRekommendations(rekommendationResourceParameters, rekommendationsFromRepo.HasNext, rekommendationsFromRepo.HasPrevious);
-
-            IEnumerable<RekommendationDto> rekommendations;
-
-            IList<RekommendationDto> rekommendationsList = new List<RekommendationDto>();
-
-            foreach (var rekommendation in rekommendationsFromRepo)
-            {
-                rekommendationsList.Add(new RekommendationDto()
-                {
-                    Id = rekommendation.Id,
-                    CreationDate = rekommendation.CreationDate,
-                    StatusChangeDate = rekommendation.StatusChangeDate,
-                    RekommenderId = rekommendation.RekommenderId,
-                    RekommenderFirstName = rekommendation.Rekommender.FirstName,
-                    RekommenderLastName = rekommendation.Rekommender.LastName,
-                    RekommenderPosition = rekommendation.Rekommender.Position.ToString(),
-                    RekommenderSeniority = rekommendation.Rekommender.Seniority.ToString(),
-                    RekommenderCompany = rekommendation.Rekommender.Company,
-                    RekommenderCity = rekommendation.Rekommender.City,
-                    RekommenderPostCode = rekommendation.Rekommender.PostCode,
-                    RekommenderEmail = rekommendation.Rekommender.Email,
-                    TechJobOpeningId = rekommendation.TechJobOpeningId,
-                    TechJobOpeningTitle = rekommendation.TechJobOpening.Title,
-                    FirstName = rekommendation.FirstName,
-                    LastName = rekommendation.LastName,
-                    Position = rekommendation.Position.ToString(),
-                    Seniority = rekommendation.Seniority.ToString(),
-                    Company = rekommendation.Company,
-                    Email = rekommendation.Email,
-                    Comment = rekommendation.Comment,
-                    Status = rekommendation.Status.ToString(),
-                    HasAlreadyWorkedWithRekommender = rekommendation.HasAlreadyWorkedWithRekommender
-                });
-            }
-
-            rekommendations = rekommendationsList;
-
-            var shapedRekommendations = rekommendations.ShapeData(rekommendationResourceParameters.Fields);
-
-            if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
-            {
-                var shapedRekommendationsWithLinks = shapedRekommendations.Select(rekommendations =>
-                {
-                    var rekommendationsAsDictionary = rekommendations as IDictionary<string, object>;
-                    var rekommendationLinks = CreateLinksForRekommendation((Guid)rekommendationsAsDictionary["Id"], null);
-                    rekommendationsAsDictionary.Add("links", rekommendationLinks);
-                    return rekommendationsAsDictionary;
-                });
-
-                var linkedCollectionResource = new
-                {
-                    value = shapedRekommendationsWithLinks,
-                    links
-                };
-
-                return Ok(linkedCollectionResource);
-            }
-            else
-            {
-                return Ok(shapedRekommendations);
-            }
+            return Ok(rekommendationsFromRepo);
         }
 
         [HttpPost(Name = "CreateRekommendation")]
-        public ActionResult<RekommendationDto> CreateRekommendation(RekommendationForCreationDto rekommendationForCreationDto)
+        [RekommendationFilter]
+        public async Task<ActionResult<RekommendationDto>> CreateRekommendation(RekommendationForCreationDto rekommendationForCreationDto)
         {
             // A modifier lors de l'implementation de l'authentification
             Guid rekommenderId = Guid.Parse("aaaef973-d8ce-4c92-95b4-3635bb2d42d1");
 
             var techJobOpeningId = rekommendationForCreationDto.TechJobOpeningId;
 
-            if (CheckTechJobOpeningIdIsValid(techJobOpeningId))
+            if (await CheckTechJobOpeningIdIsValid(techJobOpeningId))
             {
-                var rekommendation = new Rekommendation
-                {
-                    TechJobOpeningId = rekommendationForCreationDto.TechJobOpeningId,
-                    FirstName = rekommendationForCreationDto.FirstName,
-                    LastName = rekommendationForCreationDto.LastName,
-                    Position = rekommendationForCreationDto.Position.ToPosition(),
-                    Seniority = rekommendationForCreationDto.Seniority.ToSeniority(),
-                    Company = rekommendationForCreationDto.Company,
-                    Email = rekommendationForCreationDto.Email,
-                    Comment = rekommendationForCreationDto.Comment,
-                    HasAlreadyWorkedWithRekommender = rekommendationForCreationDto.HasAlreadyWorkedWithRekommender
-                };
+                var rekommendation = rekommendationForCreationDto.ToEntity();
 
                 _repository.AddRekommendation(rekommenderId, rekommendation);
 
-                var rekommendationToReturn = new RekommendationDto
-                {
-                    Id = rekommendation.Id,
-                    CreationDate = rekommendation.CreationDate,
-                    StatusChangeDate = rekommendation.StatusChangeDate,
-                    RekommenderId = rekommendation.RekommenderId,
-                    RekommenderFirstName = rekommendation.Rekommender.FirstName,
-                    RekommenderLastName = rekommendation.Rekommender.LastName,
-                    RekommenderPosition = rekommendation.Rekommender.Position.ToString(),
-                    RekommenderSeniority = rekommendation.Rekommender.Seniority.ToString(),
-                    RekommenderCompany = rekommendation.Rekommender.Company,
-                    RekommenderCity = rekommendation.Rekommender.City,
-                    RekommenderPostCode = rekommendation.Rekommender.PostCode,
-                    RekommenderEmail = rekommendation.Rekommender.Email,
-                    TechJobOpeningId = rekommendation.TechJobOpeningId,
-                    TechJobOpeningTitle = rekommendation.TechJobOpening.Title,
-                    FirstName = rekommendation.FirstName,
-                    LastName = rekommendation.LastName,
-                    Position = rekommendation.Position.ToString(),
-                    Seniority = rekommendation.Seniority.ToString(),
-                    Company = rekommendation.Company,
-                    Email = rekommendation.Email,
-                    Comment = rekommendation.Comment,
-                    Status = rekommendation.Status.ToString(),
-                    HasAlreadyWorkedWithRekommender = rekommendation.HasAlreadyWorkedWithRekommender
-                };
+                await _repository.SaveChangesAsync();
 
-                var links = CreateLinksForRekommendation(rekommendationToReturn.Id, null);
-
-                var linkedResourcesToReturn = rekommendationToReturn.ShapeData(null) as IDictionary<string, object>;
-                linkedResourcesToReturn.Add("links", links);
-
-                if (_repository.Save())
-                {
-                    return CreatedAtRoute("GetRekommendation", new { rekommendationId = linkedResourcesToReturn["Id"] }, linkedResourcesToReturn);
-                }
-                else
-                {
-                    _logger.LogInformation($"Create rekommendation cannot be saved on repository");
-                    return BadRequest();
-                }
+                return CreatedAtRoute("GetRekommendation", new { rekommendationId = rekommendation.Id }, rekommendation);
             }
             else
             {
@@ -284,9 +112,9 @@ namespace Rekommend_BackEnd.Controllers
             }
         }
 
-        private bool CheckTechJobOpeningIdIsValid(Guid techJobOpeningId)
+        private async Task<bool> CheckTechJobOpeningIdIsValid(Guid techJobOpeningId)
         {
-            var techJobOpening = _repository.GetTechJobOpening(techJobOpeningId);
+            var techJobOpening = await _repository.GetTechJobOpeningAsync(techJobOpeningId);
             if(techJobOpening != null)
             {
                 return techJobOpening.Status == JobOfferStatus.Open;
@@ -298,70 +126,50 @@ namespace Rekommend_BackEnd.Controllers
         }
 
         [HttpPut("{rekommendationId}")]
-        public IActionResult UpdateRekommendation(Guid rekommendationId, RekommendationForUpdateDto rekommendationUpdate)
+        public async Task<IActionResult> UpdateRekommendation(Guid rekommendationId, RekommendationForUpdateDto rekommendationUpdate)
         {
-            var rekommendationFromRepo = _repository.GetRekommendation(rekommendationId);
+            var rekommendationFromRepo = await _repository.GetRekommendationAsync(rekommendationId);
 
             if (rekommendationFromRepo == null)
             {
                 return NotFound();
             }
 
-            rekommendationFromRepo.FirstName = rekommendationUpdate.FirstName;
-            rekommendationFromRepo.LastName = rekommendationUpdate.LastName;
-            rekommendationFromRepo.Position = rekommendationUpdate.Position.ToPosition();
-            rekommendationFromRepo.Seniority = rekommendationUpdate.Seniority.ToSeniority();
-            rekommendationFromRepo.Comment = rekommendationUpdate.Comment;
-            
-            rekommendationFromRepo.Company = rekommendationUpdate.Company;
-            rekommendationFromRepo.Email = rekommendationUpdate.Email;
+            var oldGrade = rekommendationFromRepo.Grade;
+            var oldStatus = rekommendationFromRepo.Status;
 
-            var newGrade = rekommendationUpdate.Grade;
-            var newStatus = rekommendationUpdate.RekommendationStatus.ToRekommendationStatus();
+            rekommendationFromRepo = rekommendationUpdate.ToEntity();
+
             bool isRekommenderToBeUpdated = false;
-            if ((rekommendationFromRepo.Grade != newGrade && newGrade != -1) || (rekommendationFromRepo.Status != newStatus && newStatus != RekommendationStatus.EmailToBeVerified))
+            if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
             {
                 isRekommenderToBeUpdated = true;
             }
-            rekommendationFromRepo.Grade = newGrade;
-            rekommendationFromRepo.Status = newStatus;
-
+            
             // Action without any effect
             _repository.UpdateRekommendation(rekommendationFromRepo);
-
-            _repository.Save();
 
             if (isRekommenderToBeUpdated)
             {
                 _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
-                _repository.Save();
             }
+
+            await _repository.SaveChangesAsync();
 
             return NoContent();
         }
 
         [HttpPatch("{rekommendationId}")]
-        public ActionResult PartiallyUpdateRekommendation(Guid rekommendationId, JsonPatchDocument<RekommendationForUpdateDto> patchDocument)
+        public async Task<ActionResult> PartiallyUpdateRekommendation(Guid rekommendationId, JsonPatchDocument<RekommendationForUpdateDto> patchDocument)
         {
-            var rekommendationFromRepo = _repository.GetRekommendation(rekommendationId);
+            var rekommendationFromRepo = await _repository.GetRekommendationAsync(rekommendationId);
 
             if (rekommendationFromRepo == null)
             {
                 return NotFound();
             }
 
-            var rekommendationToPatch = new RekommendationForUpdateDto
-            {
-                FirstName = rekommendationFromRepo.FirstName,
-                LastName = rekommendationFromRepo.LastName,
-                Position = rekommendationFromRepo.Position.ToString(),
-                Seniority = rekommendationFromRepo.Seniority.ToString(),
-                Comment = rekommendationFromRepo.Comment,
-                RekommendationStatus = rekommendationFromRepo.Status.ToString(),
-                Company = rekommendationFromRepo.Company,
-                Email = rekommendationFromRepo.Email,
-                Grade = rekommendationFromRepo.Grade
-            };
+            var rekommendationToPatch = rekommendationFromRepo.ToUpdateDto();
 
             patchDocument.ApplyTo(rekommendationToPatch, ModelState);
 
@@ -370,42 +178,35 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            rekommendationFromRepo.FirstName = rekommendationToPatch.FirstName;
-            rekommendationFromRepo.LastName = rekommendationToPatch.LastName;
-            rekommendationFromRepo.Position = rekommendationToPatch.Position.ToPosition();
-            rekommendationFromRepo.Seniority = rekommendationToPatch.Seniority.ToSeniority();
-            rekommendationFromRepo.Comment = rekommendationToPatch.Comment;
-            rekommendationFromRepo.Email = rekommendationToPatch.Email;
+            var oldGrade = rekommendationFromRepo.Grade;
+            var oldStatus = rekommendationFromRepo.Status;
 
-            var newStatus =  rekommendationToPatch.RekommendationStatus.ToRekommendationStatus();
-            var newGrade = rekommendationToPatch.Grade;
+            rekommendationFromRepo = rekommendationToPatch.ToEntity();
+
             bool isRekommenderToBeUpdated = false;
 
-            if ((rekommendationFromRepo.Grade != newGrade && newGrade != -1) || (rekommendationFromRepo.Status != newStatus && newStatus != RekommendationStatus.EmailToBeVerified))
+            if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
             {
                 isRekommenderToBeUpdated = true;
             }
-            rekommendationFromRepo.Grade = newGrade;
-            rekommendationFromRepo.Status = newStatus;
-
+            
             // Action without any effect
             _repository.UpdateRekommendation(rekommendationFromRepo);
-
-            _repository.Save();
 
             if (isRekommenderToBeUpdated)
             {
                 _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
-                _repository.Save();
             }
+
+            await _repository.SaveChangesAsync();
 
             return NoContent();
         }
 
         [HttpDelete("{rekommendationId}", Name = "DeleteRekommendation")]
-        public ActionResult DeleteRekommendation(Guid rekommendationId)
+        public async Task<ActionResult> DeleteRekommendation(Guid rekommendationId)
         {
-            var rekommendationFromRepo = _repository.GetRekommendation(rekommendationId);
+            var rekommendationFromRepo = await _repository.GetRekommendationAsync(rekommendationId);
 
             if (rekommendationFromRepo == null)
             {
@@ -414,7 +215,7 @@ namespace Rekommend_BackEnd.Controllers
 
             _repository.DeleteRekommendation(rekommendationFromRepo);
 
-            _repository.Save();
+            await _repository.SaveChangesAsync();
 
             return NoContent();
         }
@@ -430,96 +231,6 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
-        }
-
-        private IEnumerable<LinkDto> CreateLinksForRekommendations(RekommendationsResourceParameters rekommendationsResourceParameters, bool hasNext, bool hasPrevious)
-        {
-            var links = new List<LinkDto>();
-
-            // self
-            links.Add(new LinkDto(CreateRekommendationsResourceUri(rekommendationsResourceParameters, ResourceUriType.Current), "self", "GET"));
-            if (hasNext)
-            {
-                links.Add(new LinkDto(CreateRekommendationsResourceUri(rekommendationsResourceParameters, ResourceUriType.NextPage), "nextPage", "GET"));
-            }
-            if (hasPrevious)
-            {
-                links.Add(new LinkDto(CreateRekommendationsResourceUri(rekommendationsResourceParameters, ResourceUriType.PreviousPage), "previousPage", "GET"));
-            }
-
-            return links;
-        }
-
-        private IEnumerable<LinkDto> CreateLinksForRekommendation(Guid rekommendationId, string fields)
-        {
-            var links = new List<LinkDto>();
-
-            if (string.IsNullOrWhiteSpace(fields))
-            {
-                links.Add(
-                    new LinkDto(Url.Link("GetRekommendation", new { rekommendationId }),
-                    "self",
-                    "GET"));
-            }
-            else
-            {
-                links.Add(
-                    new LinkDto(Url.Link("GetRekommendations", new { rekommendationId, fields }),
-                    "self",
-                    "GET"));
-            }
-            links.Add(
-                    new LinkDto(Url.Link("DeleteRekommendation", new { rekommendationId }),
-                    "delete_rekommendation",
-                    "DELETE"));
-            return links;
-        }
-
-        private string CreateRekommendationsResourceUri(RekommendationsResourceParameters rekommendationsResourceParameters, ResourceUriType type)
-        {
-            switch (type)
-            {
-                case ResourceUriType.PreviousPage:
-                    return Url.Link("GetRekommendations",
-                        new
-                        {
-                            fields = rekommendationsResourceParameters.Fields,
-                            pageNumber = rekommendationsResourceParameters.PageNumber - 1,
-                            pageSize = rekommendationsResourceParameters.PageSize,
-                            techJobOpeningId = rekommendationsResourceParameters.TechJobOpeningId,
-                            position = rekommendationsResourceParameters.Position,
-                            seniority = rekommendationsResourceParameters.Seniority,
-                            rekommendationStatus = rekommendationsResourceParameters.Status,
-                            orderBy = rekommendationsResourceParameters.OrderBy
-                        });
-                case ResourceUriType.NextPage:
-                    return Url.Link("GetCompanies",
-                        new
-                        {
-                            fields = rekommendationsResourceParameters.Fields,
-                            pageNumber = rekommendationsResourceParameters.PageNumber + 1,
-                            pageSize = rekommendationsResourceParameters.PageSize,
-                            techJobOpeningId = rekommendationsResourceParameters.TechJobOpeningId,
-                            position = rekommendationsResourceParameters.Position,
-                            seniority = rekommendationsResourceParameters.Seniority,
-                            rekommendationStatus = rekommendationsResourceParameters.Status,
-                            orderBy = rekommendationsResourceParameters.OrderBy
-                        });
-                case ResourceUriType.Current:
-                default:
-                    return Url.Link("GetCompanies",
-                        new
-                        {
-                            fields = rekommendationsResourceParameters.Fields,
-                            pageNumber = rekommendationsResourceParameters.PageNumber,
-                            pageSize = rekommendationsResourceParameters.PageSize,
-                            techJobOpeningId = rekommendationsResourceParameters.TechJobOpeningId,
-                            position = rekommendationsResourceParameters.Position,
-                            seniority = rekommendationsResourceParameters.Seniority,
-                            rekommendationStatus = rekommendationsResourceParameters.Status,
-                            orderBy = rekommendationsResourceParameters.OrderBy
-                        });
-            }
         }
     }
 }

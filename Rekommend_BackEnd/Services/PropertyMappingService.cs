@@ -10,7 +10,7 @@ namespace Rekommend_BackEnd.Services
     {
         private IList<IPropertyMapping> _propertyMappings = new List<IPropertyMapping>();
 
-        private Dictionary<string, PropertyMappingValue> _techJobOpeningPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _techJobOpeningPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
@@ -24,7 +24,7 @@ namespace Rekommend_BackEnd.Services
                 {"MaximumSalary", new PropertyMappingValue(new List<string>(){"MaximumSalary"}) }
             };
 
-        private Dictionary<string, PropertyMappingValue> _recruiterPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _recruiterPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
@@ -36,7 +36,7 @@ namespace Rekommend_BackEnd.Services
                 {"DateOfBirth", new PropertyMappingValue(new List<string>(){"DateOfBirth"}) },
             };
 
-        private Dictionary<string, PropertyMappingValue> _companyPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _companyPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
@@ -48,7 +48,7 @@ namespace Rekommend_BackEnd.Services
                 {"PostCode", new PropertyMappingValue(new List<string>(){"PostCode"}) },
             };
 
-        private Dictionary<string, PropertyMappingValue> _rekommendationPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _rekommendationPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
@@ -66,7 +66,7 @@ namespace Rekommend_BackEnd.Services
                 {"HasAlreadyWorkedWithRekommender", new PropertyMappingValue(new List<string>(){"HasAlreadyWorkedWithRekommender" }) }
             };
 
-        private Dictionary<string, PropertyMappingValue> _rekommenderPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _rekommenderPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },

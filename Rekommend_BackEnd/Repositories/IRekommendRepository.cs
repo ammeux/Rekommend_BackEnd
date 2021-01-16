@@ -1,49 +1,50 @@
-﻿using Rekommend_BackEnd.Entities;
+﻿using PagedList;
+using Rekommend_BackEnd.Entities;
 using Rekommend_BackEnd.ResourceParameters;
-using Rekommend_BackEnd.Utils;
 using System;
+using System.Threading.Tasks;
 
 namespace Rekommend_BackEnd.Repositories
 {
     public interface IRekommendRepository
     {
         // TechJobOpening
-        TechJobOpening GetTechJobOpening(Guid techJobOpeningId);
-        PagedList<TechJobOpening> GetTechJobOpenings(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters);
+        Task<TechJobOpening> GetTechJobOpeningAsync(Guid techJobOpeningId);
+        Task<IPagedList<TechJobOpening>> GetTechJobOpeningsAsync(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters);
         void AddTechJobOpening(Guid recruiterId, TechJobOpening techJobOpening);
         void UpdateTechJobOpening(TechJobOpening techJobOpening);
         void DeleteTechJobOpening(TechJobOpening techJobOpening);
         bool IsAuthorizedToPublish(Guid recruiterId);
 
         // Recruiter
-        Recruiter GetRecruiter(Guid recruiterId);
-        PagedList<Recruiter> GetRecruiters(RecruitersResourceParameters recruitersResourceParameters);
+        Task<Recruiter> GetRecruiterAsync(Guid recruiterId);
+        Task<IPagedList<Recruiter>> GetRecruitersAsync(RecruitersResourceParameters recruitersResourceParameters);
         void AddRecruiter(Guid companyId, Recruiter recruiter);
         void UpdateRecruiter(Recruiter recruiter);
         void DeleteRecruiter(Recruiter recruiter);
 
         // Company
-        Company GetCompany(Guid companyId);
-        PagedList<Company> GetCompanies(CompaniesResourceParameters companiesResourceParameters);
+        Task<Company> GetCompanyAsync(Guid companyId);
+        Task<IPagedList<Company>> GetCompaniesAsync(CompaniesResourceParameters companiesResourceParameters);
         void AddCompany(Company company);
         void UpdateCompany(Company company);
         void DeleteCompany(Company company);
 
         // Rekommendation
-        Rekommendation GetRekommendation(Guid rekommendationId);
-        PagedList<Rekommendation> GetRekommendations(RekommendationsResourceParameters rekommendationsResourceParameters);
+        Task<Rekommendation> GetRekommendationAsync(Guid rekommendationId);
+        Task<IPagedList<Rekommendation>> GetRekommendationsAsync(RekommendationsResourceParameters rekommendationsResourceParameters);
         void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation);
         void UpdateRekommendation(Rekommendation rekommendation);
         void DeleteRekommendation(Rekommendation rekommendation);
 
         // Rekommender
-        Rekommender GetRekommender(Guid RekommenderId);
+        Task<Rekommender> GetRekommenderAsync(Guid RekommenderId);
         void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId);
-        PagedList<Rekommender> GetRekommenders(RekommendersResourceParameters rekommendersResourceParameters);
+        Task<IPagedList<Rekommender>> GetRekommendersAsync(RekommendersResourceParameters rekommendersResourceParameters);
         void AddRekommender(Rekommender rekommender);
         void UpdateRekommender(Rekommender rekommender);
         void DeleteRekommender(Rekommender rekommender);
 
-        bool Save();
+        Task<bool> SaveChangesAsync();
     }
 }

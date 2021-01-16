@@ -1,31 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
+using PagedList;
+using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rekommend_BackEnd.Utils
 {
-    public class PagedList<T>: List<T>
+    public class PagedList<T> : BasePagedList<T>
     {
-        public int CurrentPage { get; private set; }
-        public int TotalPages { get; private set; }
-        public int PageSize { get; private set; }
-        public int TotalCount { get; private set; }
-        public bool HasPrevious => (CurrentPage > 1);
-        public bool HasNext => (CurrentPage < TotalPages);
-
-        public PagedList(List<T> items, int count, int pageNumber, int pageSize)
+        public static async Task<IPagedList<T>> Create(IQueryable<T> superset, int pageNumber, int pageSize)
         {
-            TotalCount = count;
-            PageSize = pageSize;
-            CurrentPage = pageNumber;
-            TotalPages = (int)Math.Ceiling(count / (double)pageSize);
-            AddRange(items);
+            var list = new PagedList<T>();
+            await list.Init(superset, pageNumber, pageSize);
+            return list;
         }
-        public static PagedList<T> Create(IQueryable<T> source, int pageNumber, int pageSize)
+
+        async Task Init(IQueryable<T> superset, int pageNumber, int pageSize)
         {
-            var count = source.Count();
-            var items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-            return new PagedList<T>(items, count, pageNumber, pageSize);
+            if (pageNumber < 1)
+                throw new ArgumentOutOfRangeException("pageNumber", pageNumber, "PageNumber cannot be below 1.");
+            if (pageSize < 1)
+                throw new ArgumentOutOfRangeException("pageSize", pageSize, "PageSize cannot be less than 1.");
+            TotalItemCount = superset == null ? 0 : await superset.CountAsync();
+            PageSize = pageSize;
+            PageNumber = pageNumber;
+            PageCount = TotalItemCount > 0 ? (int)Math.Ceiling(TotalItemCount / (double)PageSize) : 0;
+            HasPreviousPage = PageNumber > 1;
+            HasNextPage = PageNumber < PageCount;
+            IsFirstPage = PageNumber == 1;
+            IsLastPage = PageNumber >= PageCount;
+            FirstItemOnPage = (PageNumber - 1) * PageSize + 1;
+            var num = FirstItemOnPage + PageSize - 1;
+            LastItemOnPage = num > TotalItemCount ? TotalItemCount : num;
+            if (superset == null || TotalItemCount <= 0)
+                return;
+            Subset.AddRange(pageNumber == 1 ? await superset.Skip(0).Take(pageSize).ToListAsync() : await superset.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync());
         }
     }
+    public static class PagedListExtensions
+    {
+        public static async Task<IPagedList<T>> ToPagedListAsync<T>(this IQueryable<T> superset, int pageNumber, int pageSize)
+        {
+            return await PagedList<T>.Create(superset, pageNumber, pageSize);
+        }
+    }
+   
 }

@@ -22,6 +22,7 @@ namespace Rekommend_BackEnd
         public Startup()
         {
             // Build own configuration to add Environment variable connection string
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -97,9 +98,12 @@ namespace Rekommend_BackEnd
             {
                 setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             });
+            
+            // Used to create Url in filterAttributes
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
-            //services.AddTransient<IEntityPropertiesService, EntityPropertiesService>();
-            services.AddTransient<IRekommendRepository, RekommendRepository>();
+            //Add scoped on Repository as method are called asynchronously
+            services.AddScoped<IRekommendRepository, RekommendRepository>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
         }

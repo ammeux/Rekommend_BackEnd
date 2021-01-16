@@ -1,19 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PagedList;
 using Rekommend_BackEnd.DbContexts;
 using Rekommend_BackEnd.Entities;
 using Rekommend_BackEnd.Extensions;
 using Rekommend_BackEnd.Models;
 using Rekommend_BackEnd.ResourceParameters;
 using Rekommend_BackEnd.Services;
-using Rekommend_BackEnd.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Repositories
 {
-    public class RekommendRepository : IRekommendRepository
+    public class RekommendRepository : IRekommendRepository, IDisposable
     {
         private readonly ApplicationContext _context;
         private readonly IPropertyMappingService _propertyMappingService;
@@ -26,14 +27,19 @@ namespace Rekommend_BackEnd.Repositories
             //_entityPropertiesService = entityPropertiesService ?? throw new ArgumentNullException(nameof(entityPropertiesService));
         }
 
-        public PagedList<TechJobOpening> GetTechJobOpenings(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters)
+        public IQueryable<TechJobOpening> GetTechJobOpenings()
         {
-            if(techJobOpeningsResourceParameters == null)
+            return _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company) as IQueryable<TechJobOpening>;
+        }
+
+        public async Task<IPagedList<TechJobOpening>> GetTechJobOpeningsAsync(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters)
+        {
+            if (techJobOpeningsResourceParameters == null)
             {
                 throw new ArgumentNullException(nameof(techJobOpeningsResourceParameters));
             }
 
-            var collection = _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company) as IQueryable<TechJobOpening>;
+            var collection = GetTechJobOpenings();
 
             var companyCategory = techJobOpeningsResourceParameters.CompanyCategory.ToCompanyCategory();
             if (companyCategory != CompanyCategory.Undefined)
@@ -96,7 +102,7 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.ApplySort(techJobOpeningsResourceParameters.OrderBy, techJobOpeningMappingDictionary);
             }
 
-            return PagedList<TechJobOpening>.Create(collection, techJobOpeningsResourceParameters.PageNumber, techJobOpeningsResourceParameters.PageSize);
+            return await Utils.PagedList<TechJobOpening>.Create(collection, techJobOpeningsResourceParameters.PageNumber, techJobOpeningsResourceParameters.PageSize);
         }
 
         //public IDictionary<Guid, Recruiter> GetRecruiters(IEnumerable<Guid> recruiterIds)
@@ -109,7 +115,7 @@ namespace Rekommend_BackEnd.Repositories
         //    return _context.Recruiters.Where(a => recruiterIds.Contains(a.Id)).ToDictionary(x=>x.Id, y=>y);
         //}
 
-        public PagedList<Recruiter> GetRecruiters(RecruitersResourceParameters recruitersResourceParameters)
+        public async Task<IPagedList<Recruiter>> GetRecruitersAsync(RecruitersResourceParameters recruitersResourceParameters)
         {
             if (recruitersResourceParameters == null)
             {
@@ -144,7 +150,7 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.ApplySort(recruitersResourceParameters.OrderBy, recruiterMappingDictionary);
             }
 
-            return PagedList<Recruiter>.Create(collection, recruitersResourceParameters.PageNumber, recruitersResourceParameters.PageSize);
+            return await Utils.PagedList<Recruiter>.Create(collection, recruitersResourceParameters.PageNumber, recruitersResourceParameters.PageSize);
         }
 
         //public IEnumerable<Recruiter> GetCompanies(IEnumerable<Guid> companyIds)
@@ -157,7 +163,7 @@ namespace Rekommend_BackEnd.Repositories
         //    return _context.Recruiters.Where(a => companyIds.Contains(a.Id));
         //}
 
-        public PagedList<Company> GetCompanies(CompaniesResourceParameters companiesResourceParameters)
+        public async Task<IPagedList<Company>> GetCompaniesAsync(CompaniesResourceParameters companiesResourceParameters)
         {
             if (companiesResourceParameters == null)
             {
@@ -204,12 +210,17 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.ApplySort(companiesResourceParameters.OrderBy, companyMappingDictionary);
             }
 
-            return PagedList<Company>.Create(collection, companiesResourceParameters.PageNumber, companiesResourceParameters.PageSize);
+            return await Utils.PagedList<Company>.Create(collection, companiesResourceParameters.PageNumber, companiesResourceParameters.PageSize);
         }
 
-        public Recruiter GetRecruiter(Guid recruiterId)
+        public async Task<Recruiter> GetRecruiterAsync(Guid recruiterId)
         {
-            return _context.Recruiters.FirstOrDefault(a => a.Id == recruiterId);
+            if (recruiterId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(recruiterId));
+            }
+
+            return await _context.Recruiters.Include(d => d.Company).FirstOrDefaultAsync(a => a.Id == recruiterId);
         }
 
         public void AddRecruiter(Guid companyId, Recruiter recruiter)
@@ -231,9 +242,13 @@ namespace Rekommend_BackEnd.Repositories
             _context.Recruiters.Add(recruiter);
         }
 
-        public Company GetCompany(Guid companyId)
+        public async Task<Company> GetCompanyAsync(Guid companyId)
         {
-            return _context.Companies.FirstOrDefault(a => a.Id == companyId);
+            if (companyId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(companyId));
+            }
+            return await _context.Companies.FirstOrDefaultAsync(a => a.Id == companyId);
         }
 
         public void AddCompany(Company company)
@@ -248,14 +263,14 @@ namespace Rekommend_BackEnd.Repositories
             _context.Companies.Add(company);
         }
 
-        public TechJobOpening GetTechJobOpening(Guid techJobOpeningId)
+        public async Task<TechJobOpening> GetTechJobOpeningAsync(Guid techJobOpeningId)
         {
             if (techJobOpeningId == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(techJobOpeningId));
             }
 
-            return _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company).FirstOrDefault(a => a.Id == techJobOpeningId);
+            return await _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company).FirstOrDefaultAsync(a => a.Id == techJobOpeningId);
         }
 
         public void AddTechJobOpening(Guid recruiterId, TechJobOpening techJobOpening)
@@ -276,12 +291,17 @@ namespace Rekommend_BackEnd.Repositories
             _context.TechJobOpenings.Add(techJobOpening);
         }
 
-        public Rekommendation GetRekommendation(Guid rekommendationId)
+        public async Task<Rekommendation> GetRekommendationAsync(Guid rekommendationId)
         {
-            return _context.Rekommendations.Include(d => d.Rekommender).Include(d => d.TechJobOpening).FirstOrDefault(a => a.Id == rekommendationId);
+            if (rekommendationId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(rekommendationId));
+            }
+
+            return await _context.Rekommendations.Include(d => d.Rekommender).Include(d => d.TechJobOpening).FirstOrDefaultAsync(a => a.Id == rekommendationId);
         }
 
-        public PagedList<Rekommendation> GetRekommendations(RekommendationsResourceParameters rekommendationsResourceParameters)
+        public async Task<IPagedList<Rekommendation>> GetRekommendationsAsync(RekommendationsResourceParameters rekommendationsResourceParameters)
         {
             if (rekommendationsResourceParameters == null)
             {
@@ -334,7 +354,7 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.ApplySort(rekommendationsResourceParameters.OrderBy, rekommendationMappingDictionary);
             }
 
-            return PagedList<Rekommendation>.Create(collection, rekommendationsResourceParameters.PageNumber, rekommendationsResourceParameters.PageSize);
+            return await Utils.PagedList<Rekommendation>.Create(collection, rekommendationsResourceParameters.PageNumber, rekommendationsResourceParameters.PageSize);
         }
 
         public void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation)
@@ -396,12 +416,17 @@ namespace Rekommend_BackEnd.Repositories
             }
         }
 
-        public Rekommender GetRekommender(Guid rekommenderId)
+        public async Task<Rekommender> GetRekommenderAsync(Guid rekommenderId)
         {
-            return _context.Rekommenders.FirstOrDefault(a => a.Id == rekommenderId);
+            if (rekommenderId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(rekommenderId));
+            }
+
+            return  await _context.Rekommenders.FirstOrDefaultAsync(a => a.Id == rekommenderId);
         }
 
-        public PagedList<Rekommender> GetRekommenders(RekommendersResourceParameters rekommendersResourceParameters)
+        public async Task<IPagedList<Rekommender>> GetRekommendersAsync(RekommendersResourceParameters rekommendersResourceParameters)
         {
             if (rekommendersResourceParameters == null)
             {
@@ -454,7 +479,7 @@ namespace Rekommend_BackEnd.Repositories
                 collection = collection.ApplySort(rekommendersResourceParameters.OrderBy, rekommenderMappingDictionary);
             }
 
-            return PagedList<Rekommender>.Create(collection, rekommendersResourceParameters.PageNumber, rekommendersResourceParameters.PageSize);
+            return await Utils.PagedList<Rekommender>.Create(collection, rekommendersResourceParameters.PageNumber, rekommendersResourceParameters.PageSize);
         }
 
         public void AddRekommender(Rekommender rekommender)
@@ -542,9 +567,9 @@ namespace Rekommend_BackEnd.Repositories
             _context.Rekommenders.Remove(rekommender);
         }
 
-        public bool Save()
+        public async Task<bool> SaveChangesAsync()
         {
-            return (_context.SaveChanges() >= 0);
+            return (await _context.SaveChangesAsync() > 0);
         }
 
         public bool IsAuthorizedToPublish(Guid recruiterId)
@@ -555,6 +580,23 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             return _context.Recruiters.Any(a => a.Id == recruiterId);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                if(_context != null)
+                {
+                    _context.Dispose();
+                }
+            }
         }
     }
 }
