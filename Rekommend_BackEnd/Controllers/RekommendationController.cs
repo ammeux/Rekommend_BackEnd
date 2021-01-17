@@ -16,6 +16,7 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 using Marvin.Cache.Headers;
 using System.Threading.Tasks;
 using Rekommend_BackEnd.Filters;
+using Microsoft.Net.Http.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -42,8 +43,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet("{rekommendationId}", Name = "GetRekommendation")]
         [HttpHead("{rekommendationId}", Name = "GetRekommendation")]
         [RekommendationFilter]
-        public async Task<IActionResult> GetRekommendation(Guid rekommendationId, string fields)
+        public async Task<IActionResult> GetRekommendation(Guid rekommendationId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RekommendationDto>(fields))
             {
                 return BadRequest();
@@ -67,8 +74,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetRekommendations")]
         [HttpHead(Name = "GetRekommendations")]
         [RekommendationsFilter]
-        public async Task<IActionResult> GetRekommendations([FromQuery] RekommendationsResourceParameters rekommendationResourceParameters)
+        public async Task<IActionResult> GetRekommendations([FromQuery] RekommendationsResourceParameters rekommendationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RekommendationDto>(rekommendationResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Rekommendation resource parameters fields");
@@ -102,6 +115,9 @@ namespace Rekommend_BackEnd.Controllers
                 _repository.AddRekommendation(rekommenderId, rekommendation);
 
                 await _repository.SaveChangesAsync();
+
+                // Refetch the Rekommendation from the data store to include the rekommender
+                await _repository.GetRekommendationAsync(rekommendation.Id);
 
                 return CreatedAtRoute("GetRekommendation", new { rekommendationId = rekommendation.Id }, rekommendation);
             }
@@ -138,7 +154,8 @@ namespace Rekommend_BackEnd.Controllers
             var oldGrade = rekommendationFromRepo.Grade;
             var oldStatus = rekommendationFromRepo.Status;
 
-            rekommendationFromRepo = rekommendationUpdate.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(rekommendationFromRepo, rekommendationUpdate);
 
             bool isRekommenderToBeUpdated = false;
             if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
@@ -181,7 +198,8 @@ namespace Rekommend_BackEnd.Controllers
             var oldGrade = rekommendationFromRepo.Grade;
             var oldStatus = rekommendationFromRepo.Status;
 
-            rekommendationFromRepo = rekommendationToPatch.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(rekommendationFromRepo, rekommendationToPatch);
 
             bool isRekommenderToBeUpdated = false;
 
@@ -231,6 +249,19 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
+        }
+
+        private void ApplyUpdateToEntity(Rekommendation rekommendation, RekommendationForUpdateDto rekommendationUpdate)
+        {
+            rekommendation.FirstName = rekommendationUpdate.FirstName;
+            rekommendation.LastName = rekommendationUpdate.LastName;
+            rekommendation.Position = rekommendationUpdate.Position.ToPosition();
+            rekommendation.Seniority = rekommendationUpdate.Seniority.ToSeniority();
+            rekommendation.Comment = rekommendationUpdate.Comment;
+            rekommendation.Company = rekommendationUpdate.Company;
+            rekommendation.Email = rekommendationUpdate.Email;
+            rekommendation.Grade = rekommendationUpdate.Grade;
+            rekommendation.Status = rekommendationUpdate.RekommendationStatus.ToRekommendationStatus();
         }
     }
 }

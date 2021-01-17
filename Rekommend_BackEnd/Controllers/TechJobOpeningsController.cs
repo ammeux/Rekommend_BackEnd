@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Marvin.Cache.Headers;
 using System.Threading.Tasks;
 using Rekommend_BackEnd.Filters;
+using Microsoft.Net.Http.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -41,9 +42,15 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet("{techJobOpeningId}", Name = "GetTechJobOpening")]
         [HttpHead("{techJobOpeningId}", Name = "GetTechJobOpening")]
         [TechJobOpeningFilter]
-        public async Task<IActionResult> GetTechJobOpening(Guid techJobOpeningId, string fields)
+        public async Task<IActionResult> GetTechJobOpening(Guid techJobOpeningId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
-            if(!_propertyCheckerService.TypeHasProperties<TechJobOpeningDto>(fields))
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<TechJobOpeningDto>(fields))
             {
                 return BadRequest();
             }
@@ -66,8 +73,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetTechJobOpenings")]
         [HttpHead(Name = "GetTechJobOpenings")]
         [TechJobOpeningsFilter]
-        public async Task<IActionResult> GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters)
+        public async Task<IActionResult> GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<TechJobOpeningDto>(techJobOpeningsResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the TechJobOpening resource parameters fields");
@@ -128,10 +141,10 @@ namespace Rekommend_BackEnd.Controllers
 
             await _repository.SaveChangesAsync();
 
-                // Refetch the techJobOpening from the data store to include the recruiter
-                await _repository.GetTechJobOpeningAsync(techJobOpening.Id);
+            // Refetch the techJobOpening from the data store to include the recruiter
+            await _repository.GetTechJobOpeningAsync(techJobOpening.Id);
             
-                return CreatedAtRoute("GetTechJobOpening", new { techJobOpeningId = techJobOpening.Id }, techJobOpening);
+            return CreatedAtRoute("GetTechJobOpening", new { techJobOpeningId = techJobOpening.Id }, techJobOpening);
         }
 
         [HttpPut("{techJobOpeningId}")]
@@ -144,7 +157,8 @@ namespace Rekommend_BackEnd.Controllers
                 return NotFound();
             }
 
-            techJobOpeningFromRepo = techJobOpeningUpdate.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(techJobOpeningFromRepo, techJobOpeningUpdate);
 
             // Action without any effect
             _repository.UpdateTechJobOpening(techJobOpeningFromRepo);
@@ -173,7 +187,8 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            techJobOpeningFromRepo = techJobOpeningToPatch.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(techJobOpeningFromRepo, techJobOpeningToPatch);
 
             // Action without any effect
             _repository.UpdateTechJobOpening(techJobOpeningFromRepo);
@@ -211,6 +226,28 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
-        }       
+        }
+        
+        private void ApplyUpdateToEntity(TechJobOpening techJobOpeningFromRepo, TechJobOpeningForUpdateDto techJobOpeningUpdate)
+        {
+            techJobOpeningFromRepo.StartingDate = techJobOpeningUpdate.StartingDate;
+            techJobOpeningFromRepo.Title = techJobOpeningUpdate.Title;
+            techJobOpeningFromRepo.JobTechLanguage = techJobOpeningUpdate.JobTechLanguage.ToJobTechLanguage();
+            techJobOpeningFromRepo.JobPosition = techJobOpeningUpdate.JobPosition.ToPosition();
+            techJobOpeningFromRepo.Seniority = techJobOpeningUpdate.Seniority.ToSeniority();
+            techJobOpeningFromRepo.ContractType = techJobOpeningUpdate.ContractType.ToContractType();
+            techJobOpeningFromRepo.RemoteWorkAccepted = techJobOpeningUpdate.RemoteWorkAccepted;
+            techJobOpeningFromRepo.MissionDescription = techJobOpeningUpdate.MissionDescription;
+            techJobOpeningFromRepo.City = techJobOpeningUpdate.City;
+            techJobOpeningFromRepo.PostCode = techJobOpeningUpdate.PostCode;
+            techJobOpeningFromRepo.Country = techJobOpeningUpdate.Country.ToCountry();
+            techJobOpeningFromRepo.MinimumSalary = techJobOpeningUpdate.MinimumSalary;
+            techJobOpeningFromRepo.MaximumSalary = techJobOpeningUpdate.MaximumSalary;
+            techJobOpeningFromRepo.Reward1 = techJobOpeningUpdate.Reward1;
+            techJobOpeningFromRepo.Reward2 = techJobOpeningUpdate.Reward2;
+            techJobOpeningFromRepo.Reward3 = techJobOpeningUpdate.Reward3;
+            techJobOpeningFromRepo.PictureFileName = techJobOpeningUpdate.PictureFileName;
+            techJobOpeningFromRepo.RseDescription = techJobOpeningUpdate.RseDescription;
+        }
     }
 }

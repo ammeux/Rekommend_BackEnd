@@ -23,21 +23,10 @@ namespace Rekommend_BackEnd.Filters
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
-            MediaTypeHeaderValue parsedMediaType = null;
-
-            bool isParsedMediaTypeOk = false;
-            if (context.HttpContext.Request.Headers.TryGetValue("Accept", out StringValues mediaType))
-            {
-                if (MediaTypeHeaderValue.TryParse(mediaType, out parsedMediaType))
-                {
-                    isParsedMediaTypeOk = true;
-                }
-            }
             var resultFromAction = context.Result as ObjectResult;
             if (resultFromAction?.Value == null
                 || resultFromAction.StatusCode < 200
-                || resultFromAction.StatusCode >= 300
-                || !isParsedMediaTypeOk)
+                || resultFromAction.StatusCode >= 300)
             {
                 await next();
                 return;
@@ -70,7 +59,9 @@ namespace Rekommend_BackEnd.Filters
 
             var shapedTechJobOpenings = techJobOpenings.ShapeData(requestQuery["Fields"]);
 
-            if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
+            context.HttpContext.Request.Headers.TryGetValue("Accept", out StringValues mediaType);
+
+            if (MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType) && parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
                 var links = CreateLinksForTechJobOpenings(requestQuery, techJobOpeningsFromRepo.HasNextPage, techJobOpeningsFromRepo.HasPreviousPage, context, techJobOpeningsFromRepo);
                 var shapedTechJobOpeningsWithLinks = shapedTechJobOpenings.Select(techJobOpenings =>
@@ -91,9 +82,8 @@ namespace Rekommend_BackEnd.Filters
             }
             else
             {
-                resultFromAction.Value = techJobOpenings;
+                resultFromAction.Value = shapedTechJobOpenings;
             }
-
 
             await next();
         }

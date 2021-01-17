@@ -15,6 +15,7 @@ using System;
 using Marvin.Cache.Headers;
 using Rekommend_BackEnd.Filters;
 using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -40,8 +41,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet("{companyId}", Name = "GetCompany")]
         [HttpHead("{companyId}", Name = "GetCompany")]
         [CompanyFilter]
-        public async Task<IActionResult> GetCompany(Guid companyId, string fields)
+        public async Task<IActionResult> GetCompany(Guid companyId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<CompanyDto>(fields))
             {
                 return BadRequest();
@@ -65,8 +72,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetCompanies")]
         [HttpHead(Name = "GetCompanies")]
         [CompaniesFilter]
-        public async Task<IActionResult> GetCompanies([FromQuery] CompaniesResourceParameters companiesResourceParameters)
+        public async Task<IActionResult> GetCompanies([FromQuery] CompaniesResourceParameters companiesResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<CompanyDto>(companiesResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Company resource parameters fields");
@@ -108,7 +121,8 @@ namespace Rekommend_BackEnd.Controllers
                 return NotFound();
             }
 
-            companyFromRepo = companyUpdate.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(companyFromRepo, companyUpdate);
 
             // Action without any effect
             _repository.UpdateCompany(companyFromRepo);
@@ -137,7 +151,8 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            companyFromRepo = companyToPatch.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(companyFromRepo, companyToPatch);
 
             // Action without any effect
             _repository.UpdateCompany(companyFromRepo);
@@ -175,6 +190,19 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
+        }
+
+        private void ApplyUpdateToEntity(Company company, CompanyForUpdateDto companyUpdate)
+        {
+            company.Name = companyUpdate.Name;
+            company.HqCity = companyUpdate.HqCity;
+            company.HqCountry = companyUpdate.HqCountry;
+            company.PostCode = companyUpdate.PostCode;
+            company.CompanyDescription = companyUpdate.CompanyDescription;
+            company.Category = companyUpdate.Category.ToCompanyCategory();
+            company.LogoFileName = companyUpdate.LogoFileName;
+            company.Website = companyUpdate.Website;
+            company.EmployerBrandWebsite = companyUpdate.EmployerBrandWebsite;
         }
     }
 }

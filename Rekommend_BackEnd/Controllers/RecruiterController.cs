@@ -15,6 +15,7 @@ using System;
 using Marvin.Cache.Headers;
 using Rekommend_BackEnd.Filters;
 using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -41,8 +42,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet("{recruiterId}", Name = "GetRecruiter")]
         [HttpHead("{recruiterId}", Name = "GetRecruiter")]
         [RecruiterFilter]
-        public async Task<IActionResult> GetRecruiter(Guid recruiterId, string fields)
+        public async Task<IActionResult> GetRecruiter(Guid recruiterId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(fields))
             {
                 return BadRequest();
@@ -66,8 +73,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetRecruiters")]
         [HttpHead(Name = "GetRecruiters")]
         [RecruitersFilter]
-        public async Task<IActionResult> GetRecruiters([FromQuery] RecruitersResourceParameters recruitersResourceParameters)
+        public async Task<IActionResult> GetRecruiters([FromQuery] RecruitersResourceParameters recruitersResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(recruitersResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Recruiter resource parameters fields");
@@ -114,7 +127,8 @@ namespace Rekommend_BackEnd.Controllers
                 return NotFound();
             }
 
-            recruiterFromRepo = recruiterUpdate.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(recruiterFromRepo, recruiterUpdate);
 
             // Action without any effect
             _repository.UpdateRecruiter(recruiterFromRepo);
@@ -143,7 +157,8 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            recruiterFromRepo = recruiterToPatch.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(recruiterFromRepo, recruiterToPatch);
 
             // Action without any effect
             _repository.UpdateRecruiter(recruiterFromRepo);
@@ -181,6 +196,16 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
+        }
+
+        private void ApplyUpdateToEntity(Recruiter recruiter, RecruiterForUpdateDto recruiterUpdate)
+        {
+            recruiter.FirstName = recruiterUpdate.FirstName;
+            recruiter.LastName = recruiterUpdate.LastName;
+            recruiter.Position = recruiterUpdate.Position.ToRecruiterPosition();
+            recruiter.DateOfBirth = recruiterUpdate.DateOfBirth;
+            recruiter.Email = recruiterUpdate.Email;
+            recruiter.Gender = recruiterUpdate.Gender.ToGender();
         }
     }
 }

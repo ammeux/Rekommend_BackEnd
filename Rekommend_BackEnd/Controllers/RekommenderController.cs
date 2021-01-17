@@ -15,6 +15,7 @@ using System;
 using Marvin.Cache.Headers;
 using Rekommend_BackEnd.Filters;
 using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -41,8 +42,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet("{rekommenderId}", Name = "GetRekommender")]
         [HttpHead("{rekommenderId}", Name = "GetRekommender")]
         [RekommenderFilter]
-        public async Task<IActionResult> GetRekommender(Guid rekommenderId, string fields)
+        public async Task<IActionResult> GetRekommender(Guid rekommenderId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RekommenderDto>(fields))
             {
                 return BadRequest();
@@ -66,8 +73,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetRekommenders")]
         [HttpHead(Name = "GetRekommenders")]
         [RekommendersFilter]
-        public async Task<IActionResult> GetRekommenders([FromQuery] RekommendersResourceParameters rekommenderResourceParameters)
+        public async Task<IActionResult> GetRekommenders([FromQuery] RekommendersResourceParameters rekommenderResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
+            {
+                _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<RekommenderDto>(rekommenderResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Rekommender resource parameters fields");
@@ -108,7 +121,8 @@ namespace Rekommend_BackEnd.Controllers
                 return NotFound();
             }
 
-            rekommenderFromRepo = rekommenderUpdate.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(rekommenderFromRepo, rekommenderUpdate);
 
             // Action without any effect
             _repository.UpdateRekommender(rekommenderFromRepo);
@@ -137,7 +151,8 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            rekommenderFromRepo = rekommenderToPatch.ToEntity();
+            // Need to keep repoInstance for Entity Framework
+            ApplyUpdateToEntity(rekommenderFromRepo, rekommenderToPatch);
 
             // Action without any effect
             _repository.UpdateRekommender(rekommenderFromRepo);
@@ -175,6 +190,18 @@ namespace Rekommend_BackEnd.Controllers
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
+        }
+
+        private void ApplyUpdateToEntity(Rekommender rekommender, RekommenderForUpdateDto rekommenderUpdate)
+        {
+            rekommender.FirstName = rekommenderUpdate.FirstName;
+            rekommender.LastName = rekommenderUpdate.LastName;
+            rekommender.Position = rekommenderUpdate.Position.ToPosition();
+            rekommender.Seniority = rekommenderUpdate.Seniority.ToSeniority();
+            rekommender.City = rekommenderUpdate.City;
+            rekommender.PostCode = rekommenderUpdate.PostCode;
+            rekommender.Company = rekommenderUpdate.Company;
+            rekommender.Email = rekommenderUpdate.Email;
         }
     }
 }

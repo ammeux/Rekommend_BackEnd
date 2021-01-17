@@ -18,21 +18,10 @@ namespace Rekommend_BackEnd.Filters
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
-            MediaTypeHeaderValue parsedMediaType = null;
-            bool isParsedMediaTypeOk = false;
-            if (context.HttpContext.Request.Headers.TryGetValue("Accept", out StringValues mediaType))
-            {
-                if (MediaTypeHeaderValue.TryParse(mediaType, out parsedMediaType))
-                {
-                    isParsedMediaTypeOk = true;
-                }
-            }
-
             var resultFromAction = context.Result as ObjectResult;
             if (resultFromAction?.Value == null
                || resultFromAction.StatusCode < 200
-               || resultFromAction.StatusCode >= 300 ||
-               !isParsedMediaTypeOk)
+               || resultFromAction.StatusCode >= 300)
             {
                 await next();
                 return;
@@ -42,7 +31,9 @@ namespace Rekommend_BackEnd.Filters
 
             RekommendationDto rekommendationDto = rekommendationFromRepo.ToDto();
 
-            if (parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
+            context.HttpContext.Request.Headers.TryGetValue("Accept", out StringValues mediaType);
+
+            if (MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType) && parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
                 string fields = context.HttpContext.Request.Query["Fields"];
                 IEnumerable<LinkDto> links = CreateLinksForRekommendation(rekommendationDto.Id, fields, context);
