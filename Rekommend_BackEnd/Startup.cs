@@ -106,6 +106,15 @@ namespace Rekommend_BackEnd
             services.AddScoped<IRekommendRepository, RekommendRepository>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+
+            // Add Cors Policies
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("CorsPolicy", policy =>
+                {
+                    policy.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -133,6 +142,8 @@ namespace Rekommend_BackEnd
             app.UseHttpCacheHeaders();
 
             app.UseRouting();
+
+            app.UseCors("CorsPolicy");
 
             app.UseAuthorization();
 
