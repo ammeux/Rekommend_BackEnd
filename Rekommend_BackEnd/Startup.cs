@@ -115,6 +115,16 @@ namespace Rekommend_BackEnd
                     policy.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
                 });
             });
+
+            // Identity Server 4 authentication
+            services.AddAuthentication("Bearer")
+                .AddIdentityServerAuthentication(options =>
+                {
+                    options.Authority = "https://localhost:44353";
+                    //options.RequireHttpsMetadata = false;
+                    options.ApiName = "rekommendapi";
+                    //options.CacheDuration = TimeSpan.FromMinutes(10); // Default
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -144,6 +154,8 @@ namespace Rekommend_BackEnd
             app.UseRouting();
 
             app.UseCors("CorsPolicy");
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

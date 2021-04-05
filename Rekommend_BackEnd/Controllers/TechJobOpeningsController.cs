@@ -16,6 +16,7 @@ using Marvin.Cache.Headers;
 using System.Threading.Tasks;
 using Rekommend_BackEnd.Filters;
 using Microsoft.Net.Http.Headers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -73,6 +74,7 @@ namespace Rekommend_BackEnd.Controllers
         [HttpGet(Name = "GetTechJobOpenings")]
         [HttpHead(Name = "GetTechJobOpenings")]
         [TechJobOpeningsFilter]
+        [Authorize]
         public async Task<IActionResult> GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
