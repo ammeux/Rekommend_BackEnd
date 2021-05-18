@@ -17,14 +17,16 @@ namespace IdentityServerHost.Quickstart.UI
         {
              new TestUser
              {
-                 SubjectId = "d860efca-22d9-47fd-8249-791ba61b07c7",
+                 SubjectId = "40acecde-ba0f-4936-9f70-a4ef44d65ed9",
                  Username = "Frank",
-                 Password = "password",
+                 Password = "c6bockdo",
 
                  Claims = new List<Claim>
                  {
                      new Claim("given_name", "Frank"),
                      new Claim("family_name", "Underwood"),
+                     new Claim("address", "Main road 1"),
+                     new Claim("subscriptionlevel", "FreeUser")
                  }
              },
              new TestUser
@@ -37,6 +39,8 @@ namespace IdentityServerHost.Quickstart.UI
                  {
                      new Claim("given_name", "Claire"),
                      new Claim("family_name", "Underwood"),
+                     new Claim("address", "Big Street 2"),
+                     new Claim("subscriptionlevel", "PayingUser")
                  }
              }
          };

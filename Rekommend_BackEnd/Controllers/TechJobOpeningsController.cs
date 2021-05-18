@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Rekommend_BackEnd.Filters;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace Rekommend_BackEnd.Controllers
 {
@@ -102,16 +103,9 @@ namespace Rekommend_BackEnd.Controllers
 
         [HttpPost(Name = "CreateTechJobOpening")]
         [TechJobOpeningFilter]
+        [Authorize("MustBeARecruiter")]
         public async Task<ActionResult<TechJobOpeningDto>> CreateTechJobOpening(TechJobOpeningForCreationDto techJobOpeningForCreationDto)
         {
-            // A modifier lors de l'implementation de l'authentification
-            Guid recruiterId = Guid.Parse("40acecde-ba0f-4936-9f70-a4ef44d65ed9");
-            if (!_repository.IsAuthorizedToPublish(recruiterId))
-            {
-                _logger.LogInformation($"Recruiter [{recruiterId}] is not authorised to publish");
-                NotFound();
-            }
-
             var techJobOpening = techJobOpeningForCreationDto.ToEntity();
 
             if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.Reward1))
@@ -139,7 +133,12 @@ namespace Rekommend_BackEnd.Controllers
                 techJobOpening.RseDescription = techJobOpeningForCreationDto.RseDescription;
             }
 
-            _repository.AddTechJobOpening(recruiterId, techJobOpening);
+            var ownerId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+
+            if (Guid.TryParse(ownerId, out Guid ownerIdAsGuid))
+            {
+                _repository.AddTechJobOpening(ownerIdAsGuid, techJobOpening);
+            }
 
             await _repository.SaveChangesAsync();
 

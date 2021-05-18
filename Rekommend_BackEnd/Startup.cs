@@ -12,6 +12,8 @@ using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Rekommend_BackEnd.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Rekommend_BackEnd
 {
@@ -104,6 +106,7 @@ namespace Rekommend_BackEnd
 
             //Add scoped on Repository as method are called asynchronously
             services.AddScoped<IRekommendRepository, RekommendRepository>();
+            services.AddScoped<IAuthorizationHandler, MustBeARecruiterHandler>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
 
@@ -125,6 +128,18 @@ namespace Rekommend_BackEnd
                     options.ApiName = "rekommendapi";
                     //options.CacheDuration = TimeSpan.FromMinutes(10); // Default
                 });
+
+            // Identity Server 4 authorization
+            services.AddAuthorization(authorizationOptions =>
+            {
+                authorizationOptions.AddPolicy(
+                    "MustBeARecruiter",
+                    policyBuilder =>
+                    {
+                        policyBuilder.RequireAuthenticatedUser();
+                        policyBuilder.AddRequirements(new MustBeARecruiterRequirement());
+                    });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -149,7 +164,7 @@ namespace Rekommend_BackEnd
 
             app.UseHttpsRedirection();
 
-            app.UseHttpCacheHeaders();
+            //app.UseHttpCacheHeaders();
 
             app.UseRouting();
 

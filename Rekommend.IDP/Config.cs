@@ -14,7 +14,9 @@ namespace Rekommend.IDP
             new IdentityResource[]
             { 
                 new IdentityResources.OpenId(),
-                new IdentityResources.Profile()
+                new IdentityResources.Profile(),
+                new IdentityResources.Address(),
+                new IdentityResource("subscriptionlevel", "Your subscription level", new List<string>(){"subscriptionlevel" })
             };
 
         public static IEnumerable<ApiScope> ApiScopes =>
@@ -57,7 +59,9 @@ namespace Rekommend.IDP
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        "rekommendapi"
+                        IdentityServerConstants.StandardScopes.Address,
+                        "rekommendapi",
+                        "subscriptionlevel"
                     },
                 }
 
