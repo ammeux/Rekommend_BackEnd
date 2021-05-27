@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Rekommend.IDP.Services;
+using Rekommend.IDP.UserRegistration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,23 +23,28 @@ namespace IdentityServerHost.Quickstart.UI
     [AllowAnonymous]
     public class ExternalController : Controller
     {
-        private readonly TestUserStore _users;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
         private readonly ILogger<ExternalController> _logger;
         private readonly IEventService _events;
+        private readonly ILocalUserService _localUserService;
+        // Dictionary to map 3rd party claims to local claims
+        private readonly Dictionary<string, string> _facebookClaimTypeMap =
+            new Dictionary<string, string>()
+            {
+                { "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", JwtClaimTypes.Email },
+                { "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname", JwtClaimTypes.GivenName },
+                { "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname", JwtClaimTypes.FamilyName }
+            };
 
         public ExternalController(
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IEventService events,
             ILogger<ExternalController> logger,
-            TestUserStore users = null)
+            ILocalUserService localUserService)
         {
-            // if the TestUserStore is not in DI, then we'll just use the global users collection
-            // this is where you would plug in your own custom identity management library (e.g. ASP.NET Identity)
-            _users = users ?? new TestUserStore(TestUsers.Users);
-
+            _localUserService = localUserService ?? throw new ArgumentNullException(nameof(localUserService));
             _interaction = interaction;
             _clientStore = clientStore;
             _logger = logger;
@@ -94,13 +101,29 @@ namespace IdentityServerHost.Quickstart.UI
             }
 
             // lookup our user and external provider info
-            var (user, provider, providerUserId, claims) = FindUserFromExternalProvider(result);
+            var (user, provider, providerUserId, claims) = await FindUserFromExternalProvider(result);
             if (user == null)
             {
                 // this might be where you might initiate a custom workflow for user registration
                 // in this sample we don't show how that would be done, as our sample implementation
                 // simply auto-provisions new external user
-                user = AutoProvisionUser(provider, providerUserId, claims);
+                if(provider == "Facebook")
+                {
+                    // redirect to RegisterUserFromFacebookView
+                    return RedirectToAction("RegisterUserFromFacebook", "UserRegistration",
+                        new RegisterUserFromFacebookInputViewModel()
+                        {
+                            Email = claims.FirstOrDefault(c =>
+                                   c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value,
+                            GivenName = claims.FirstOrDefault(c =>
+                                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value,
+                            FamilyName = claims.FirstOrDefault(c =>
+                                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname")?.Value,
+                            Provider = provider,
+                            ProviderUserId = providerUserId
+                        });
+                }
+                user = await AutoProvisionUser(provider, providerUserId, claims);
             }
 
             // this allows us to collect any additional claims or properties
@@ -111,9 +134,9 @@ namespace IdentityServerHost.Quickstart.UI
             ProcessLoginCallback(result, additionalLocalClaims, localSignInProps);
             
             // issue authentication cookie for user
-            var isuser = new IdentityServerUser(user.SubjectId)
+            var isuser = new IdentityServerUser(user.Subject)
             {
-                DisplayName = user.Username,
+                DisplayName = user.UserName,
                 IdentityProvider = provider,
                 AdditionalClaims = additionalLocalClaims
             };
@@ -128,7 +151,7 @@ namespace IdentityServerHost.Quickstart.UI
 
             // check if external login is in the context of an OIDC request
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.SubjectId, user.Username, true, context?.Client.ClientId));
+            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Subject, user.UserName, true, context?.Client.ClientId));
 
             if (context != null)
             {
@@ -143,7 +166,7 @@ namespace IdentityServerHost.Quickstart.UI
             return Redirect(returnUrl);
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
+        private async Task<(Rekommend.IDP.Entities.User user, string provider, string providerUserId, IEnumerable<Claim> claims)> FindUserFromExternalProvider(AuthenticateResult result)
         {
             var externalUser = result.Principal;
 
@@ -162,14 +185,24 @@ namespace IdentityServerHost.Quickstart.UI
             var providerUserId = userIdClaim.Value;
 
             // find external user
-            var user = _users.FindByExternalProvider(provider, providerUserId);
+            var user = await _localUserService.GetUserByExternalProvider(provider, providerUserId);
 
             return (user, provider, providerUserId, claims);
         }
 
-        private TestUser AutoProvisionUser(string provider, string providerUserId, IEnumerable<Claim> claims)
+        private async Task<Rekommend.IDP.Entities.User> AutoProvisionUser(string provider, string providerUserId, IEnumerable<Claim> claims)
         {
-            var user = _users.AutoProvisionUser(provider, providerUserId, claims.ToList());
+            var mappedClaims = new List<Claim>();
+            // map the claims and ignore those for which no mapping exists
+            foreach(var claim in claims)
+            {
+                if(_facebookClaimTypeMap.ContainsKey(claim.Type))
+                {
+                    mappedClaims.Add(new Claim(_facebookClaimTypeMap[claim.Type], claim.Value));
+                }
+            }
+            var user = _localUserService.ProvisionUserFromExternalIdentity(provider, providerUserId, mappedClaims);
+            await _localUserService.SaveChangesAsync();
             return user;
         }
 

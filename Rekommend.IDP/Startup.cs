@@ -60,6 +60,13 @@ namespace Rekommend.IDP
 
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
+
+            services.AddAuthentication().AddFacebook(
+                "Facebook",
+                options =>
+                {
+                    // NOT TO BE PUBLISHED (REFER TO FB DEVELOPPER)
+                });
         }
 
         public void Configure(IApplicationBuilder app)
