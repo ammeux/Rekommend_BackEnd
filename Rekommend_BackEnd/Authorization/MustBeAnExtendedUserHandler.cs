@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 
 namespace Rekommend_BackEnd.Authorization
 {
-    public class MustBeARecruiterHandler : AuthorizationHandler<MustBeARecruiterRequirement>
+    public class MustBeAnExtendedUserHandler : AuthorizationHandler<MustBeAnExtendedUserRequirement>
     {
         private readonly IRekommendRepository _rekommendRepository;
 
-        public MustBeARecruiterHandler(IRekommendRepository rekommendRepository)
+        public MustBeAnExtendedUserHandler(IRekommendRepository rekommendRepository)
         {
             _rekommendRepository = rekommendRepository ?? throw new ArgumentNullException(nameof(rekommendRepository));
         }
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MustBeARecruiterRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MustBeAnExtendedUserRequirement requirement)
         {
 
-            var ownerId = context.User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var ownerId = context.User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             
             if (!Guid.TryParse(ownerId, out Guid ownerIdAsGuid) || !_rekommendRepository.IsAuthorizedToPublish(ownerIdAsGuid))
             {

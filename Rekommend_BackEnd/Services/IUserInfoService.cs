@@ -2,13 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Services
 {
     public interface IUserInfoService
     {
-        string UserId { get; set; }
+        Guid UserId { get; set; }
         string FirstName { get; set; }
         string LastName { get; set; }
+        string Email { get; set; }
+        string Address { get; set; }
+        Country? Country { get; set; }
+        string Company { get; set; }
+        Profile? Profile { get; set; }
+        Seniority? Seniority { get; set; }
+        JobTechLanguage? Stack { get; set; }
     }
 }

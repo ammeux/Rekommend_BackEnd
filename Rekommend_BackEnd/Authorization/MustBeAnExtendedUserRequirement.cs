@@ -2,9 +2,9 @@
 
 namespace Rekommend_BackEnd.Authorization
 {
-    public class MustBeARecruiterRequirement : IAuthorizationRequirement
+    public class MustBeAnExtendedUserRequirement : IAuthorizationRequirement
     {
-        public MustBeARecruiterRequirement()
+        public MustBeAnExtendedUserRequirement()
         {
 
         }

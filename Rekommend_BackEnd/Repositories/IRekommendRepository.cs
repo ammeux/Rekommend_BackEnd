@@ -14,14 +14,14 @@ namespace Rekommend_BackEnd.Repositories
         void AddTechJobOpening(Guid recruiterId, TechJobOpening techJobOpening);
         void UpdateTechJobOpening(TechJobOpening techJobOpening);
         void DeleteTechJobOpening(TechJobOpening techJobOpening);
-        bool IsAuthorizedToPublish(Guid recruiterId);
+        bool IsAuthorizedToPublish(Guid userId);
 
         // Recruiter
-        Task<Recruiter> GetRecruiterAsync(Guid recruiterId);
-        Task<IPagedList<Recruiter>> GetRecruitersAsync(RecruitersResourceParameters recruitersResourceParameters);
-        void AddRecruiter(Guid companyId, Recruiter recruiter);
-        void UpdateRecruiter(Recruiter recruiter);
-        void DeleteRecruiter(Recruiter recruiter);
+        Task<ExtendedUser> GetExtendedUserAsync(Guid extendedUserId);
+        Task<IPagedList<ExtendedUser>> GetExtendedUsersAsync(ExtendedUsersResourceParameters recruitersResourceParameters);
+        void AddExtendedUser(Guid companyId, ExtendedUser extendedUser);
+        void UpdateExtendedUser(ExtendedUser extendedUser);
+        void DeleteExtendedUser(ExtendedUser extendedUser);
 
         // Company
         Task<Company> GetCompanyAsync(Guid companyId);
@@ -36,14 +36,6 @@ namespace Rekommend_BackEnd.Repositories
         void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation);
         void UpdateRekommendation(Rekommendation rekommendation);
         void DeleteRekommendation(Rekommendation rekommendation);
-
-        // Rekommender
-        Task<Rekommender> GetRekommenderAsync(Guid RekommenderId);
-        void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId);
-        Task<IPagedList<Rekommender>> GetRekommendersAsync(RekommendersResourceParameters rekommendersResourceParameters);
-        void AddRekommender(Rekommender rekommender);
-        void UpdateRekommender(Rekommender rekommender);
-        void DeleteRekommender(Rekommender rekommender);
 
         Task<bool> SaveChangesAsync();
     }

@@ -256,10 +256,7 @@ namespace Rekommend.IDP.Services
         //    });            
         //}
 
-        public User ProvisionUserFromExternalIdentity(
-            string provider,
-            string providerIdentityKey,
-            IEnumerable<Claim> claims)
+        public User ProvisionUserFromExternalIdentity(string provider, string providerIdentityKey,IEnumerable<Claim> claims, string userName = null)
         {
             if (string.IsNullOrWhiteSpace(provider))
             {
@@ -274,7 +271,8 @@ namespace Rekommend.IDP.Services
             var user = new User()
             {
                 Active = true,
-                Subject = Guid.NewGuid().ToString()
+                Subject = Guid.NewGuid().ToString(),
+                UserName = userName
             };
             foreach (var claim in claims)
             {
@@ -283,6 +281,10 @@ namespace Rekommend.IDP.Services
                     Type = claim.Type,
                     Value = claim.Value
                 });
+                if(claim.Type == "email")
+                {
+                    user.Email = claim.Value;
+                }
             }
             user.Logins.Add(new UserLogin()
             {

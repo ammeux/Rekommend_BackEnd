@@ -5,21 +5,28 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Entities
 {
-    public class TechJobOpening
+    public class TechJobOpening : AuditableEntity
     {
         [Key]
         public Guid Id { get; set; }
-        [Required]
-        public DateTimeOffset CreationDate { get; set; }
         public DateTimeOffset ClosingDate { get; set; }
         public DateTimeOffset StartingDate { get; set; }
         [Required]
         [MaxLength(50)]
         public string Title { get; set; }
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
         [Required]
-        public Guid RecruiterId { get; set; }
-        [ForeignKey("RecruiterId")]
-        public Recruiter Recruiter { get; set; }
+        public Guid CompanyId { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string CreatedByFirstName { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string CreatedByLastName { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public RecruiterPosition CreatedByPosiion { get; set; }
         [Required]
         public JobTechLanguage JobTechLanguage { get; set; }
         [Required]
@@ -40,11 +47,9 @@ namespace Rekommend_BackEnd.Entities
         [Required]
         public Country Country { get; set; }
         [MaxLength(50)]
-        public string Reward1 { get; set; }
+        public string Reward { get; set; }
         [MaxLength(50)]
-        public string Reward2 { get; set; }
-        [MaxLength(50)]
-        public string Reward3 { get; set; }
+        public string BonusReward { get; set; }
         public int LikesNb { get; set; }
         public int RekommendationsNb { get; set; }
         public int ViewsNb { get; set; }

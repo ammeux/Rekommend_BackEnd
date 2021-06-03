@@ -138,14 +138,35 @@ namespace Rekommend_BackEnd.Extensions
                     return Seniority.Undefined;
                 case "junior":
                     return Seniority.Junior;
+                case "mid-senior":
+                    return Seniority.MidSenior;
                 case "senior":
                     return Seniority.Senior;
-                case "director":
-                    return Seniority.Director;
-                case "executive":
-                    return Seniority.Executive;
+                case "expert":
+                    return Seniority.Expert;
                 default:
                     return Seniority.Undefined;
+            }
+        }
+
+        public static Profile ToProfile(this string source)
+        {
+            if (source == null)
+            {
+                return Profile.Undefined;
+            }
+
+            switch (source.ToLower())
+            {
+                case "undefined":
+                    return Profile.Undefined;
+                case "tech":
+                    return Profile.Tech;
+                case "non-tech":
+                case "nontech":
+                    return Profile.NonTech;
+                default:
+                    return Profile.Undefined;
             }
         }
 
@@ -195,25 +216,6 @@ namespace Rekommend_BackEnd.Extensions
                 case "undefined":
                 default:
                     return RekommendationStatus.Undefined;
-            }
-        }
-
-        public static Gender ToGender(this string source)
-        {
-            if(source == null)
-            {
-                return Gender.Undefined;
-            }
-
-            switch(source.ToLower())
-            {
-                case "Female":
-                    return Gender.Female;
-                case "Male":
-                    return Gender.Male;
-                case "undefined":
-                default:
-                    return Gender.Undefined;
             }
         }
     }

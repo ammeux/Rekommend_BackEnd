@@ -10,17 +10,17 @@ namespace Rekommend_BackEnd.Extensions
             return new TechJobOpeningDto()
             {
                 Id = source.Id,
-                CreationDate = source.CreationDate,
+                CreatedOn = source.CreatedOn,
                 ClosingDate = source.ClosingDate,
                 StartingDate = source.StartingDate,
                 Title = source.Title,
-                CompanyId = source.Recruiter.CompanyId,
-                CompanyName = source.Recruiter.Company.Name,
-                CompanyCategory = source.Recruiter.Company.Category.ToString(),
-                RecruiterId = source.RecruiterId,
-                RecruiterFirstName = source.Recruiter.FirstName,
-                RecruiterLastName = source.Recruiter.LastName,
-                RecruiterPosition = source.Recruiter.Position.ToString(),
+                CompanyId = source.CompanyId,
+                CompanyName = source.Company.Name,
+                CompanyCategory = source.Company.Category.ToString(),
+                CreatedById = source.CreatedBy,
+                RecruiterFirstName = source.CreatedByFirstName,
+                RecruiterLastName = source.CreatedByLastName,
+                RecruiterPosition = source.CreatedByPosiion.ToString(),
                 JobTechLanguage = source.JobTechLanguage.ToString(),
                 JobPosition = source.JobPosition.ToString(),
                 Seniority = source.Seniority.ToString(),
@@ -30,9 +30,8 @@ namespace Rekommend_BackEnd.Extensions
                 City = source.City.ToString(),
                 PostCode = source.PostCode,
                 Country = source.Country.ToString(),
-                Reward1 = source.Reward1,
-                Reward2 = source.Reward2,
-                Reward3 = source.Reward3,
+                Reward = source.Reward,
+                BonusReward = source.BonusReward,
                 LikesNb = source.LikesNb,
                 RekommendationsNb = source.RekommendationsNb,
                 ViewsNb = source.ViewsNb,
@@ -61,9 +60,8 @@ namespace Rekommend_BackEnd.Extensions
                 Country = source.Country.ToString(),
                 MinimumSalary = source.MinimumSalary,
                 MaximumSalary = source.MaximumSalary,
-                Reward1 = source.Reward1,
-                Reward2 = source.Reward2,
-                Reward3 = source.Reward3,
+                Reward = source.Reward,
+                BonusReward = source.BonusReward,
                 PictureFileName = source.PictureFileName,
                 RseDescription = source.RseDescription
             };
@@ -106,66 +104,48 @@ namespace Rekommend_BackEnd.Extensions
                 Country = source.Country.ToCountry(),
                 MinimumSalary = source.MinimumSalary,
                 MaximumSalary = source.MaximumSalary,
-                Reward1 = source.Reward1,
-                Reward2 = source.Reward2,
-                Reward3 = source.Reward3,
+                Reward = source.Reward,
+                BonusReward = source.BonusReward,
                 PictureFileName = source.PictureFileName,
                 RseDescription = source.RseDescription
             };
         }
 
-        public static RecruiterDto ToDto(this Recruiter source)
+        public static ExtendedUserDto ToDto(this ExtendedUser source)
         {
-            return new RecruiterDto()
+            return new ExtendedUserDto()
             {
                 Id = source.Id,
-                RegistrationDate = source.RegistrationDate,
-                FirstName = source.FirstName,
-                LastName = source.LastName,
                 CompanyId = source.CompanyId,
                 Position = source.Position.ToString(),
-                Age = source.DateOfBirth.GetCurrentAge(),
-                Email = source.Email,
-                Gender = source.Gender.ToString()
+                Age = source.DateOfBirth.GetCurrentAge()
             };
         }
 
-        public static Recruiter ToEntity(this RecruiterForCreationDto source)
+        public static ExtendedUser ToEntity(this ExtendedUserForCreationDto source)
         {
-            return new Recruiter()
+            return new ExtendedUser()
             {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
                 Position = source.Position.ToRecruiterPosition(),
-                DateOfBirth = source.DateOfBirth,
-                Email = source.Email,
-                Gender = source.Gender.ToGender()
+                DateOfBirth = source.DateOfBirth
             };
         }
 
-        public static Recruiter ToEntity(this RecruiterForUpdateDto source)
+        public static ExtendedUser ToEntity(this ExtendedUserForUpdateDto source)
         {
-            return new Recruiter()
+            return new ExtendedUser()
             {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
                 Position = source.Position.ToRecruiterPosition(),
-                DateOfBirth = source.DateOfBirth,
-                Email = source.Email,
-                Gender = source.Gender.ToGender()
+                DateOfBirth = source.DateOfBirth
             };
         }
 
-        public static RecruiterForUpdateDto ToUpdateDto(this Recruiter source)
+        public static ExtendedUserForUpdateDto ToUpdateDto(this ExtendedUser source)
         {
-            return new RecruiterForUpdateDto()
+            return new ExtendedUserForUpdateDto()
             {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
                 Position = source.Position.ToString(),
-                DateOfBirth = source.DateOfBirth,
-                Email = source.Email,
-                Gender = source.Gender.ToString()
+                DateOfBirth = source.DateOfBirth
             };
         }
 
@@ -174,7 +154,6 @@ namespace Rekommend_BackEnd.Extensions
             return new CompanyDto()
             {
                 Id = source.Id,
-                RegistrationDate = source.RegistrationDate,
                 Name = source.Name,
                 HqCity = source.HqCity,
                 HqCountry = source.HqCountry,
@@ -240,17 +219,17 @@ namespace Rekommend_BackEnd.Extensions
             return new RekommendationDto()
             {
                 Id = source.Id,
-                CreationDate = source.CreationDate,
-                StatusChangeDate = source.StatusChangeDate,
-                RekommenderId = source.RekommenderId,
-                RekommenderFirstName = source.Rekommender.FirstName,
-                RekommenderLastName = source.Rekommender.LastName,
-                RekommenderPosition = source.Rekommender.Position.ToString(),
-                RekommenderSeniority = source.Rekommender.Seniority.ToString(),
-                RekommenderCompany = source.Rekommender.Company,
-                RekommenderCity = source.Rekommender.City,
-                RekommenderPostCode = source.Rekommender.PostCode,
-                RekommenderEmail = source.Rekommender.Email,
+                CreatedOn = source.CreatedOn,
+                StatusChangeDate = source.UpdatedOn,
+                //RekommenderId = source.RekommenderId,
+                //RekommenderFirstName = source.Rekommender.FirstName,
+                //RekommenderLastName = source.Rekommender.LastName,
+                //RekommenderPosition = source.Rekommender.Position.ToString(),
+                //RekommenderSeniority = source.Rekommender.Seniority.ToString(),
+                //RekommenderCompany = source.Rekommender.Company,
+                //RekommenderCity = source.Rekommender.City,
+                //RekommenderPostCode = source.Rekommender.PostCode,
+                //RekommenderEmail = source.Rekommender.Email,
                 TechJobOpeningId = source.TechJobOpeningId,
                 TechJobOpeningTitle = source.TechJobOpening.Title,
                 FirstName = source.FirstName,
@@ -313,95 +292,28 @@ namespace Rekommend_BackEnd.Extensions
             };
         }
 
-        public static RekommenderDto ToDto(this Rekommender source)
-        {
-            return new RekommenderDto()
-            {
-                Id = source.Id,
-                Age = source.DateOfBirth.GetCurrentAge(),
-                RegistrationDate = source.RegistrationDate,
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                Position = source.Position.ToString(),
-                Seniority = source.Seniority.ToString(),
-                Company = source.Company,
-                City = source.City,
-                PostCode = source.PostCode,
-                Email = source.Email,
-                XpRekommend = source.XpRekommend,
-                RekommendationsAvgGrade = source.RekommendationsAvgGrade,
-                Level = GetRekommenderLevel(source.XpRekommend)
-            };
-        }
-
-        public static Rekommender ToEntity(this RekommenderForCreationDto source)
-        {
-            return new Rekommender()
-            {
-                DateOfBirth = source.DateOfBirth,
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                Position = source.Position.ToPosition(),
-                Seniority = source.Seniority.ToSeniority(),
-                Company = source.Company,
-                City = source.City,
-                PostCode = source.PostCode,
-                Email = source.Email
-            };
-        }
-
-        public static Rekommender ToEntity(this RekommenderForUpdateDto source)
-        {
-            return new Rekommender()
-            {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                Position = source.Position.ToPosition(),
-                Seniority = source.Seniority.ToSeniority(),
-                Company = source.Company,
-                City = source.City,
-                PostCode = source.PostCode,
-                Email = source.Email
-            };
-        }
-
-        public static RekommenderForUpdateDto ToUpdateDto(this Rekommender source)
-        {
-            return new RekommenderForUpdateDto()
-            {
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                Position = source.Position.ToString(),
-                Seniority = source.Seniority.ToString(),
-                City = source.City,
-                PostCode = source.PostCode,
-                Company = source.Company,
-                Email = source.Email
-            };
-        }
-
-        private static string GetRekommenderLevel(int xpRekommend)
-        {
-            if (xpRekommend < 50)
-            {
-                return "Apprentice";
-            }
-            else if (xpRekommend < 200)
-            {
-                return "Craftsman";
-            }
-            else if (xpRekommend < 500)
-            {
-                return "Master";
-            }
-            else if (xpRekommend < 1000)
-            {
-                return "Giant";
-            }
-            else
-            {
-                return "Hero";
-            }
-        }
+        //private static string GetUserLevel(int xpRekommend)
+        //{
+        //    if (xpRekommend < 50)
+        //    {
+        //        return "Apprentice";
+        //    }
+        //    else if (xpRekommend < 200)
+        //    {
+        //        return "Craftsman";
+        //    }
+        //    else if (xpRekommend < 500)
+        //    {
+        //        return "Master";
+        //    }
+        //    else if (xpRekommend < 1000)
+        //    {
+        //        return "Giant";
+        //    }
+        //    else
+        //    {
+        //        return "Hero";
+        //    }
+        //}
     }
 }

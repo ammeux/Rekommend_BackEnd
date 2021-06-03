@@ -21,14 +21,14 @@ namespace Rekommend_BackEnd.Controllers
 {
     [ApiController]
     [Route("api/recruiters")]
-    public class RecruiterController : ControllerBase
+    public class ExtendedUserController : ControllerBase
     {
         private readonly IPropertyCheckerService _propertyCheckerService;
         private readonly IRekommendRepository _repository;
         private readonly IPropertyMappingService _propertyMappingService;
-        private readonly ILogger<RecruiterController> _logger;
+        private readonly ILogger<ExtendedUserController> _logger;
 
-        public RecruiterController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<RecruiterController> logger)
+        public ExtendedUserController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<ExtendedUserController> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _propertyCheckerService = propertyCheckerService ?? throw new ArgumentNullException(nameof(propertyCheckerService));
@@ -41,7 +41,7 @@ namespace Rekommend_BackEnd.Controllers
         [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet("{recruiterId}", Name = "GetRecruiter")]
         [HttpHead("{recruiterId}", Name = "GetRecruiter")]
-        [RecruiterFilter]
+        [ExtendedUserFilter]
         public async Task<IActionResult> GetRecruiter(Guid recruiterId, string fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
@@ -50,12 +50,12 @@ namespace Rekommend_BackEnd.Controllers
                 return BadRequest();
             }
 
-            if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(fields))
+            if (!_propertyCheckerService.TypeHasProperties<ExtendedUserDto>(fields))
             {
                 return BadRequest();
             }
 
-            var recruiterFromRepo = await _repository.GetRecruiterAsync(recruiterId);
+            var recruiterFromRepo = await _repository.GetExtendedUserAsync(recruiterId);
 
             if(recruiterFromRepo == null)
             {
@@ -72,8 +72,8 @@ namespace Rekommend_BackEnd.Controllers
         [Produces("application/json", "application/vnd.rekom.hateoas+json")]
         [HttpGet(Name = "GetRecruiters")]
         [HttpHead(Name = "GetRecruiters")]
-        [RecruitersFilter]
-        public async Task<IActionResult> GetRecruiters([FromQuery] RecruitersResourceParameters recruitersResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
+        [ExtendedUsersFilter]
+        public async Task<IActionResult> GetRecruiters([FromQuery] ExtendedUsersResourceParameters recruitersResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
@@ -81,57 +81,57 @@ namespace Rekommend_BackEnd.Controllers
                 return BadRequest();
             }
 
-            if (!_propertyCheckerService.TypeHasProperties<RecruiterDto>(recruitersResourceParameters.Fields))
+            if (!_propertyCheckerService.TypeHasProperties<ExtendedUserDto>(recruitersResourceParameters.Fields))
             {
                 _logger.LogInformation($"Property checker did not find on of the Recruiter resource parameters fields");
                 return BadRequest();
             }
 
-            if (!_propertyMappingService.ValidMappingExistsFor<RecruiterDto, Recruiter>
+            if (!_propertyMappingService.ValidMappingExistsFor<ExtendedUserDto, ExtendedUser>
                 (recruitersResourceParameters.OrderBy))
             {
                 return BadRequest();
             }
 
-            var recruitersFromRepo = await _repository.GetRecruitersAsync(recruitersResourceParameters);
+            var recruitersFromRepo = await _repository.GetExtendedUsersAsync(recruitersResourceParameters);
 
             return Ok(recruitersFromRepo);
         }
 
         [HttpPost(Name = "CreateRecruiter")]
-        [RecruiterFilter]
-        public async Task<ActionResult<RecruiterDto>> CreateRecruiter(RecruiterForCreationDto recruiterForCreationDto)
+        [ExtendedUserFilter]
+        public async Task<ActionResult<ExtendedUserDto>> CreateRecruiter(ExtendedUserForCreationDto extendedUserForCreationDto)
         {
             // A modifier lors de l'implementation de l'authentification
             Guid companyId = Guid.Parse("e0de73e1-3873-496a-ad69-37334f6f58f3");
 
-            var recruiter = recruiterForCreationDto.ToEntity();
+            var recruiter = extendedUserForCreationDto.ToEntity();
 
-            _repository.AddRecruiter(companyId, recruiter);
+            _repository.AddExtendedUser(companyId, recruiter);
 
             await _repository.SaveChangesAsync();
 
             // Refetch the recruiter from the data store to include the company
-            await _repository.GetRecruiterAsync(recruiter.Id);
+            await _repository.GetExtendedUserAsync(recruiter.Id);
 
             return CreatedAtRoute("GetRecruiter", new { recruiterId = recruiter.Id }, recruiter);
         }
 
         [HttpPut("{recruiterId}")]
-        public async Task<IActionResult> UpdateRecruiter(Guid recruiterId, RecruiterForUpdateDto recruiterUpdate)
+        public async Task<IActionResult> UpdateExtendedUser(Guid extendedUserId, ExtendedUserForUpdateDto recruiterUpdate)
         {
-            var recruiterFromRepo = await _repository.GetRecruiterAsync(recruiterId);
+            var extendedUserFromRepo = await _repository.GetExtendedUserAsync(extendedUserId);
 
-            if (recruiterFromRepo == null)
+            if (extendedUserFromRepo == null)
             {
                 return NotFound();
             }
 
             // Need to keep repoInstance for Entity Framework
-            ApplyUpdateToEntity(recruiterFromRepo, recruiterUpdate);
+            ApplyUpdateToEntity(extendedUserFromRepo, recruiterUpdate);
 
             // Action without any effect
-            _repository.UpdateRecruiter(recruiterFromRepo);
+            _repository.UpdateExtendedUser(extendedUserFromRepo);
 
             await _repository.SaveChangesAsync();
 
@@ -139,9 +139,9 @@ namespace Rekommend_BackEnd.Controllers
         }
 
         [HttpPatch("{recruiterId}")]
-        public async Task<ActionResult> PartiallyUpdateRecruiter(Guid recruiterId, JsonPatchDocument<RecruiterForUpdateDto> patchDocument)
+        public async Task<ActionResult> PartiallyUpdateRecruiter(Guid recruiterId, JsonPatchDocument<ExtendedUserForUpdateDto> patchDocument)
         {
-            var recruiterFromRepo = await _repository.GetRecruiterAsync(recruiterId);
+            var recruiterFromRepo = await _repository.GetExtendedUserAsync(recruiterId);
 
             if(recruiterFromRepo == null)
             {
@@ -161,7 +161,7 @@ namespace Rekommend_BackEnd.Controllers
             ApplyUpdateToEntity(recruiterFromRepo, recruiterToPatch);
 
             // Action without any effect
-            _repository.UpdateRecruiter(recruiterFromRepo);
+            _repository.UpdateExtendedUser(recruiterFromRepo);
 
             await _repository.SaveChangesAsync();
 
@@ -171,14 +171,14 @@ namespace Rekommend_BackEnd.Controllers
         [HttpDelete("{recruiterId}", Name = "DeleteRecruiter")]
         public async Task<ActionResult> DeleteRecruiter(Guid recruiterId)
         {
-            var recruiterFromRepo = await _repository.GetRecruiterAsync(recruiterId);
+            var recruiterFromRepo = await _repository.GetExtendedUserAsync(recruiterId);
 
             if(recruiterFromRepo == null)
             {
                 return NotFound();
             }
 
-            _repository.DeleteRecruiter(recruiterFromRepo);
+            _repository.DeleteExtendedUser(recruiterFromRepo);
 
             await _repository.SaveChangesAsync();
 
@@ -198,14 +198,10 @@ namespace Rekommend_BackEnd.Controllers
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
         }
 
-        private void ApplyUpdateToEntity(Recruiter recruiter, RecruiterForUpdateDto recruiterUpdate)
+        private void ApplyUpdateToEntity(ExtendedUser recruiter, ExtendedUserForUpdateDto recruiterUpdate)
         {
-            recruiter.FirstName = recruiterUpdate.FirstName;
-            recruiter.LastName = recruiterUpdate.LastName;
             recruiter.Position = recruiterUpdate.Position.ToRecruiterPosition();
             recruiter.DateOfBirth = recruiterUpdate.DateOfBirth;
-            recruiter.Email = recruiterUpdate.Email;
-            recruiter.Gender = recruiterUpdate.Gender.ToGender();
         }
     }
 }

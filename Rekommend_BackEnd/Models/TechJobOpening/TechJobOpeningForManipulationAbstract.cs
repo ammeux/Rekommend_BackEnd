@@ -32,11 +32,9 @@ namespace Rekommend_BackEnd.Models
         [Required]
         public string Country { get; set; }
         [MaxLength(50)]
-        public string Reward1 { get; set; }
+        public string Reward { get; set; }
         [MaxLength(50)]
-        public string Reward2 { get; set; }
-        [MaxLength(50)]
-        public string Reward3 { get; set; }
+        public string BonusReward { get; set; }
         public int MinimumSalary { get; set; }
         public int MaximumSalary { get; set; }
         [MaxLength(50)]

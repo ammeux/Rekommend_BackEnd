@@ -6,14 +6,14 @@ namespace Rekommend_BackEnd.Models
     public class TechJobOpeningDto
     {
         public Guid Id { get; set; }
-        public DateTimeOffset CreationDate { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
         public DateTimeOffset ClosingDate { get; set; }
         public DateTimeOffset StartingDate { get; set; }
         public string Title { get; set; }
         public Guid CompanyId { get; set; }
         public string CompanyName { get; set; }
         public string CompanyCategory { get; set; }
-        public Guid RecruiterId { get; set; }
+        public Guid CreatedById { get; set; }
         public string RecruiterFirstName { get; set; }
         public string RecruiterLastName { get; set; }
         public string RecruiterPosition { get; set; }
@@ -26,9 +26,8 @@ namespace Rekommend_BackEnd.Models
         public string City { get; set; }
         public int PostCode { get; set; }
         public string Country { get; set; }
-        public string Reward1 { get; set; }
-        public string Reward2 { get; set; }
-        public string Reward3 { get; set; }
+        public string Reward { get; set; }
+        public string BonusReward { get; set; }
         public int LikesNb { get; set; }
         public int RekommendationsNb { get; set; }
         public int ViewsNb { get; set; }

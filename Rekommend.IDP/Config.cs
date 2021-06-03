@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Models;
 using System.Collections.Generic;
@@ -14,9 +15,17 @@ namespace Rekommend.IDP
             new IdentityResource[]
             { 
                 new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
-                new IdentityResources.Address(),
-                new IdentityResource("subscriptionlevel", "Your subscription level", new List<string>(){"subscriptionlevel" })
+                //new IdentityResources.Profile(),
+                //new IdentityResources.Address(),
+                new IdentityResource(JwtClaimTypes.Email, "Your email", new List<string>(){ JwtClaimTypes.Email }),
+                new IdentityResource(JwtClaimTypes.GivenName, "Your first name", new List<string>(){ JwtClaimTypes.GivenName }),
+                new IdentityResource(JwtClaimTypes.FamilyName, "Your family name", new List<string>(){ JwtClaimTypes.FamilyName }),
+                new IdentityResource(JwtClaimTypes.Address, "Your city", new List<string>(){ JwtClaimTypes.Address }),
+                new IdentityResource("country", "Your country", new List<string>(){ "country" }),
+                new IdentityResource("company", "Your company", new List<string>(){ "company" }),
+                new IdentityResource("profile", "Your profile tech or non tech", new List<string>(){ "profile" }),
+                new IdentityResource("stack", "Your stack", new List<string>(){ "stack" }),
+                new IdentityResource("seniority", "Your seniority", new List<string>(){ "seniority" }),
             };
 
         public static IEnumerable<ApiScope> ApiScopes =>
@@ -27,7 +36,17 @@ namespace Rekommend.IDP
         {
             return new List<ApiResource>
             {
-                new ApiResource("rekommendapi", "API rekommend")
+                new ApiResource("rekommendapi", "API rekommend", new List<string>(){
+                    JwtClaimTypes.Email, 
+                    JwtClaimTypes.GivenName, 
+                    JwtClaimTypes.FamilyName,
+                    JwtClaimTypes.Address,
+                    "country",
+                    "company",
+                    "profile",
+                    "stack",
+                    "seniority"
+                })
                 {
                     Scopes = {"rekommendapi"}
                 }
@@ -58,10 +77,18 @@ namespace Rekommend.IDP
                     AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile,
-                        IdentityServerConstants.StandardScopes.Address,
+                        //IdentityServerConstants.StandardScopes.Profile,
+                        //IdentityServerConstants.StandardScopes.Address,
                         "rekommendapi",
-                        "subscriptionlevel"
+                        JwtClaimTypes.Email,
+                        JwtClaimTypes.GivenName,
+                        JwtClaimTypes.FamilyName,
+                        JwtClaimTypes.Address,
+                        "country",
+                        "company",
+                        "profile",
+                        "seniority",
+                        "stack"
                     },
                 }
 

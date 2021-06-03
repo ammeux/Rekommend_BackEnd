@@ -6,7 +6,6 @@ namespace Rekommend_BackEnd.Models
     public class CompanyDto
     {
         public Guid Id { get; set; }
-        public DateTimeOffset RegistrationDate { get; set; }
         public string Name { get; set; }
         public string HqCity { get; set; }
         public int PostCode { get; set; }

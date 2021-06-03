@@ -5,7 +5,7 @@ namespace Rekommend_BackEnd.Models
     public class RekommendationDto
     {
         public Guid Id { get; set; }
-        public DateTimeOffset CreationDate { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
         public DateTimeOffset StatusChangeDate { get; set; }
 
         public Guid RekommenderId { get; set; }

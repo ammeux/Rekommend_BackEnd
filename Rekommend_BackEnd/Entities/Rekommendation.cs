@@ -5,18 +5,10 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Entities
 {
-    public class Rekommendation
+    public class Rekommendation : AuditableEntity
     {
         [Key]
         public Guid Id { get; set; }
-        [Required]
-        public DateTimeOffset CreationDate { get; set; }
-        [Required]
-        public DateTimeOffset StatusChangeDate { get; set; }
-        [ForeignKey("RekommenderId")]
-        public Rekommender Rekommender { get; set; }
-        [Required]
-        public Guid RekommenderId { get; set; }
         [ForeignKey("TechJobOpeningId")]
         public TechJobOpening TechJobOpening { get; set; }
         [Required]

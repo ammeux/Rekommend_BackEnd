@@ -15,6 +15,10 @@
     <Compile Remove="Migrations\20210519135338_InitialMigration.Designer.cs" />
     <Compile Remove="Migrations\20210519140549_InitialMigration.cs" />
     <Compile Remove="Migrations\20210519140549_InitialMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210601183313_MoveAllToIDPUser.cs" />
+    <Compile Remove="Migrations\20210601183313_MoveAllToIDPUser.Designer.cs" />
+    <Compile Remove="Migrations\20210601212605_CleanBackendEntities.cs" />
+    <Compile Remove="Migrations\20210601212605_CleanBackendEntities.Designer.cs" />
   </ItemGroup>
   
   <ItemGroup>

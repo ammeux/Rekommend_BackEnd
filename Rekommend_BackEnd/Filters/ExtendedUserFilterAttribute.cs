@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace Rekommend_BackEnd.Filters
 {
-    public class RecruiterFilterAttribute : ResultFilterAttribute
+    public class ExtendedUserFilterAttribute : ResultFilterAttribute
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
@@ -27,30 +27,30 @@ namespace Rekommend_BackEnd.Filters
                 return;
             }
 
-            var recruiterFromRepo = (Recruiter)resultFromAction.Value;
+            var extendedUserFromRepo = (ExtendedUser)resultFromAction.Value;
 
-            RecruiterDto recruiterDto = recruiterFromRepo.ToDto();
+            ExtendedUserDto extendedUserDto = extendedUserFromRepo.ToDto();
 
             context.HttpContext.Request.Headers.TryGetValue("Accept", out StringValues mediaType);
 
             if (MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType) && parsedMediaType.MediaType == "application/vnd.rekom.hateoas+json")
             {
                 string fields = context.HttpContext.Request.Query["Fields"];
-                IEnumerable<LinkDto> links = CreateLinksForRecruiter(recruiterDto.Id, fields, context);
+                IEnumerable<LinkDto> links = CreateLinksForExtendedUsers(extendedUserDto.Id, fields, context);
 
-                var recruiterToReturn = recruiterDto.ShapeData(fields) as IDictionary<string, object>;
-                recruiterToReturn.Add("links", links);
+                var extendedUserToReturn = extendedUserDto.ShapeData(fields) as IDictionary<string, object>;
+                extendedUserToReturn.Add("links", links);
 
-                resultFromAction.Value = recruiterToReturn;
+                resultFromAction.Value = extendedUserToReturn;
             }
             else
             {
-                resultFromAction.Value = recruiterDto;
+                resultFromAction.Value = extendedUserDto;
             }
             await next();
         }
 
-        private IEnumerable<LinkDto> CreateLinksForRecruiter(Guid recruiterId, string fields, ResultExecutingContext context)
+        private IEnumerable<LinkDto> CreateLinksForExtendedUsers(Guid extendedUserId, string fields, ResultExecutingContext context)
         {
             var links = new List<LinkDto>();
 
@@ -62,20 +62,20 @@ namespace Rekommend_BackEnd.Filters
             if (string.IsNullOrWhiteSpace(fields))
             {
                 links.Add(
-                    new LinkDto(Url.Link("GetRecruiter", new { recruiterId }),
+                    new LinkDto(Url.Link("GetExtendedUser", new { extendedUserId }),
                     "self",
                     "GET"));
             }
             else
             {
                 links.Add(
-                    new LinkDto(Url.Link("GetRecruiter", new { recruiterId, fields }),
+                    new LinkDto(Url.Link("GetExtendedUser", new { extendedUserId, fields }),
                     "self",
                     "GET"));
             }
             links.Add(
-                    new LinkDto(Url.Link("DeleteRecruiter", new { recruiterId }),
-                    "delete_recruiter",
+                    new LinkDto(Url.Link("DeleteExtendedUser", new { extendedUserId }),
+                    "delete_extendedUser",
                     "DELETE"));
             return links;
         }

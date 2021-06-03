@@ -72,7 +72,7 @@ namespace Rekommend.IDP.UserRegistration
             userToCreate.Claims.Add(new Entities.UserClaim()
             {
                 Type = JwtClaimTypes.Address,
-                Value = model.Address
+                Value = model.City
             });
             userToCreate.Claims.Add(new Entities.UserClaim()
             {
@@ -83,6 +83,26 @@ namespace Rekommend.IDP.UserRegistration
             {
                 Type = JwtClaimTypes.FamilyName,
                 Value = model.FamilyName
+            });
+            userToCreate.Claims.Add(new Entities.UserClaim()
+            {
+                Type = "profile",
+                Value = model.Profile
+            });
+            userToCreate.Claims.Add(new Entities.UserClaim()
+            {
+                Type = "company",
+                Value = model.Company
+            });
+            userToCreate.Claims.Add(new Entities.UserClaim()
+            {
+                Type = "stack",
+                Value = model.Stack
+            });
+            userToCreate.Claims.Add(new Entities.UserClaim()
+            {
+                Type = "seniority",
+                Value = model.Seniority
             });
 
             _localUserService.AddUser(userToCreate, model.Password);
@@ -142,12 +162,16 @@ namespace Rekommend.IDP.UserRegistration
                 new Claim(JwtClaimTypes.Email, model.Email),
                 new Claim(JwtClaimTypes.GivenName, model.GivenName),
                 new Claim(JwtClaimTypes.FamilyName, model.FamilyName),
-                new Claim(JwtClaimTypes.Address, model.Address),
-                new Claim("Country", model.Country)
+                new Claim(JwtClaimTypes.Address, model.City),
+                new Claim("country", model.Country),
+                new Claim("company", model.Company),
+                new Claim("profile", model.Profile),
+                new Claim("stack", model.Stack),
+                new Claim("seniority", model.Seniority),
             };
 
             // provision the user
-            _localUserService.ProvisionUserFromExternalIdentity(model.Provider, model.ProviderUserId, claims);
+            _localUserService.ProvisionUserFromExternalIdentity(model.Provider, model.ProviderUserId, claims, model.UserName);
             await _localUserService.SaveChangesAsync();
 
             // redirect

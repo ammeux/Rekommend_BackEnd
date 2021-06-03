@@ -106,7 +106,8 @@ namespace Rekommend_BackEnd
 
             //Add scoped on Repository as method are called asynchronously
             services.AddScoped<IRekommendRepository, RekommendRepository>();
-            services.AddScoped<IAuthorizationHandler, MustBeARecruiterHandler>();
+            services.AddScoped<IAuthorizationHandler, MustBeAnExtendedUserHandler>();
+            services.AddScoped<IUserInfoService, UserInfoService>();
             services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
 
@@ -137,7 +138,7 @@ namespace Rekommend_BackEnd
                     policyBuilder =>
                     {
                         policyBuilder.RequireAuthenticatedUser();
-                        policyBuilder.AddRequirements(new MustBeARecruiterRequirement());
+                        policyBuilder.AddRequirements(new MustBeAnExtendedUserRequirement());
                     });
             });
         }

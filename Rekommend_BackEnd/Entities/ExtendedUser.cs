@@ -5,18 +5,12 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Entities
 {
-    public class Recruiter
+    public class ExtendedUser : AuditableEntity
     {
         [Key]
         public Guid Id { get; set; }
         [Required]
-        public DateTimeOffset RegistrationDate { get; set; }
-        [Required]
-        [MaxLength(50)]
-        public string FirstName { get; set; }
-        [Required]
-        [MaxLength(50)]
-        public string LastName { get; set; }
+        public Guid UserId { get; set; }
         [ForeignKey("CompanyId")]
         public Company Company { get; set; }
         [Required]
@@ -26,9 +20,8 @@ namespace Rekommend_BackEnd.Entities
         [Required]
         public DateTimeOffset DateOfBirth { get; set; }
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-        [Required]
-        public Gender Gender { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime SubscriptionDate { get; set; }
+        public SubscriptionPlan CurrentPlan { get;set; }
     }
 }

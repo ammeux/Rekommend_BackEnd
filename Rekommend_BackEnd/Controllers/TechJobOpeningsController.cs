@@ -29,13 +29,15 @@ namespace Rekommend_BackEnd.Controllers
         private readonly IRekommendRepository _repository;
         private readonly IPropertyMappingService _propertyMappingService;
         private readonly ILogger<TechJobOpeningsController> _logger;
+        private readonly IUserInfoService _userInfoService;
 
-        public TechJobOpeningsController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<TechJobOpeningsController> logger)
+        public TechJobOpeningsController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<TechJobOpeningsController> logger, IUserInfoService userInfoService)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _propertyCheckerService = propertyCheckerService ?? throw new ArgumentNullException(nameof(propertyCheckerService));
             _propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userInfoService = userInfoService ?? throw new ArgumentNullException(nameof(userInfoService));
         }
 
         [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
@@ -78,6 +80,8 @@ namespace Rekommend_BackEnd.Controllers
         [Authorize]
         public async Task<IActionResult> GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
+            //string firstName = _userInfoService.FirstName;
+
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");
@@ -108,19 +112,14 @@ namespace Rekommend_BackEnd.Controllers
         {
             var techJobOpening = techJobOpeningForCreationDto.ToEntity();
 
-            if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.Reward1))
+            if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.Reward))
             {
-                techJobOpening.Reward1 = techJobOpeningForCreationDto.Reward1;
+                techJobOpening.Reward = techJobOpeningForCreationDto.Reward;
             }
 
-            if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.Reward2))
+            if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.BonusReward))
             {
-                techJobOpening.Reward2 = techJobOpeningForCreationDto.Reward2;
-            }
-
-            if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.Reward3))
-            {
-                techJobOpening.Reward3 = techJobOpeningForCreationDto.Reward3;
+                techJobOpening.BonusReward = techJobOpeningForCreationDto.BonusReward;
             }
 
             if (!string.IsNullOrWhiteSpace(techJobOpeningForCreationDto.PictureFileName))
@@ -133,12 +132,12 @@ namespace Rekommend_BackEnd.Controllers
                 techJobOpening.RseDescription = techJobOpeningForCreationDto.RseDescription;
             }
 
-            var ownerId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            techJobOpening.CreatedByFirstName = _userInfoService.FirstName;
+            techJobOpening.CreatedByLastName = _userInfoService.LastName;
 
-            if (Guid.TryParse(ownerId, out Guid ownerIdAsGuid))
-            {
-                _repository.AddTechJobOpening(ownerIdAsGuid, techJobOpening);
-            }
+            techJobOpening.CompanyId = _repository.GetExtendedUserAsync(_userInfoService.UserId).Result.CompanyId;
+
+            _repository.AddTechJobOpening(_userInfoService.UserId, techJobOpening);
 
             await _repository.SaveChangesAsync();
 
@@ -244,9 +243,8 @@ namespace Rekommend_BackEnd.Controllers
             techJobOpeningFromRepo.Country = techJobOpeningUpdate.Country.ToCountry();
             techJobOpeningFromRepo.MinimumSalary = techJobOpeningUpdate.MinimumSalary;
             techJobOpeningFromRepo.MaximumSalary = techJobOpeningUpdate.MaximumSalary;
-            techJobOpeningFromRepo.Reward1 = techJobOpeningUpdate.Reward1;
-            techJobOpeningFromRepo.Reward2 = techJobOpeningUpdate.Reward2;
-            techJobOpeningFromRepo.Reward3 = techJobOpeningUpdate.Reward3;
+            techJobOpeningFromRepo.Reward = techJobOpeningUpdate.Reward;
+            techJobOpeningFromRepo.BonusReward = techJobOpeningUpdate.BonusReward;
             techJobOpeningFromRepo.PictureFileName = techJobOpeningUpdate.PictureFileName;
             techJobOpeningFromRepo.RseDescription = techJobOpeningUpdate.RseDescription;
         }

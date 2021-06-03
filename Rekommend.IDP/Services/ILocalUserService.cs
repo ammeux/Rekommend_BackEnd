@@ -18,7 +18,7 @@ namespace Rekommend.IDP.Services
         Task<string> InitiatePasswordResetRequest(string email);
         Task<bool> SetPassword(string securityCode, string password);
         Task<User> GetUserByExternalProvider(string provider, string providerIdentityKey);
-        User ProvisionUserFromExternalIdentity(string provider, string providerIdentityKey, IEnumerable<Claim> claims);
+        User ProvisionUserFromExternalIdentity(string provider, string providerIdentityKey, IEnumerable<Claim> claims, string userName = null);
         //Task AddExternalProviderToUser(
         //    string subject, 
         //    string provider,

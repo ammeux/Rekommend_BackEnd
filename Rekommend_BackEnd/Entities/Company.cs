@@ -4,12 +4,10 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Entities
 {
-    public class Company
+    public class Company : AuditableEntity
     {
         [Key]
         public Guid Id { get; set; }
-        [Required]
-        public DateTimeOffset RegistrationDate { get; set; }
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }

@@ -151,25 +151,25 @@ namespace Rekommend_BackEnd.Controllers
                 return NotFound();
             }
 
-            var oldGrade = rekommendationFromRepo.Grade;
-            var oldStatus = rekommendationFromRepo.Status;
+            //var oldGrade = rekommendationFromRepo.Grade;
+            //var oldStatus = rekommendationFromRepo.Status;
 
             // Need to keep repoInstance for Entity Framework
             ApplyUpdateToEntity(rekommendationFromRepo, rekommendationUpdate);
 
-            bool isRekommenderToBeUpdated = false;
-            if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
-            {
-                isRekommenderToBeUpdated = true;
-            }
+            //bool isRekommenderToBeUpdated = false;
+            //if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
+            //{
+            //    isRekommenderToBeUpdated = true;
+            //}
             
             // Action without any effect
             _repository.UpdateRekommendation(rekommendationFromRepo);
 
-            if (isRekommenderToBeUpdated)
-            {
-                _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
-            }
+            //if (isRekommenderToBeUpdated)
+            //{
+            //    _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
+            //}
 
             await _repository.SaveChangesAsync();
 
@@ -195,26 +195,26 @@ namespace Rekommend_BackEnd.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var oldGrade = rekommendationFromRepo.Grade;
-            var oldStatus = rekommendationFromRepo.Status;
+            //var oldGrade = rekommendationFromRepo.Grade;
+            //var oldStatus = rekommendationFromRepo.Status;
 
             // Need to keep repoInstance for Entity Framework
             ApplyUpdateToEntity(rekommendationFromRepo, rekommendationToPatch);
 
-            bool isRekommenderToBeUpdated = false;
+            //bool isRekommenderToBeUpdated = false;
 
-            if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
-            {
-                isRekommenderToBeUpdated = true;
-            }
+            //if ((rekommendationFromRepo.Grade != oldGrade && rekommendationFromRepo.Grade != -1) || (rekommendationFromRepo.Status != oldStatus && rekommendationFromRepo.Status != RekommendationStatus.EmailToBeVerified))
+            //{
+            //    isRekommenderToBeUpdated = true;
+            //}
             
             // Action without any effect
             _repository.UpdateRekommendation(rekommendationFromRepo);
 
-            if (isRekommenderToBeUpdated)
-            {
-                _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
-            }
+            //if (isRekommenderToBeUpdated)
+            //{
+            //    _repository.RecomputeXpAndRekoAvgFromRekommender(rekommendationFromRepo.RekommenderId);
+            //}
 
             await _repository.SaveChangesAsync();
 

@@ -8,13 +8,13 @@ namespace Rekommend_BackEnd.Services
 {
     public class PropertyMappingService : IPropertyMappingService
     {
-        private IList<IPropertyMapping> _propertyMappings = new List<IPropertyMapping>();
+        private readonly IList<IPropertyMapping> _propertyMappings = new List<IPropertyMapping>();
 
         private readonly Dictionary<string, PropertyMappingValue> _techJobOpeningPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
-                {"CreationDate", new PropertyMappingValue(new List<string>(){"CreationDate"}) },
+                {"CreatedOn", new PropertyMappingValue(new List<string>(){"CreatedOn"}) },
                 {"Title", new PropertyMappingValue(new List<string>() {"Title" })},
                 {"JobTechLanguage", new PropertyMappingValue(new List<string>(){"JobTechLanguage"}) },
                 {"JobPosition", new PropertyMappingValue(new List<string>() {"JobPosition" }) },
@@ -24,23 +24,19 @@ namespace Rekommend_BackEnd.Services
                 {"MaximumSalary", new PropertyMappingValue(new List<string>(){"MaximumSalary"}) }
             };
 
-        private readonly Dictionary<string, PropertyMappingValue> _recruiterPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> _extendedUserPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
-                {"RegistrationDate", new PropertyMappingValue(new List<string>() {"RegistrationDate" })},
-                {"FirstName", new PropertyMappingValue(new List<string>(){"FirstName"}) },
-                {"LastName", new PropertyMappingValue(new List<string>() {"LastName" }) },
                 {"CompanyId", new PropertyMappingValue(new List<string>(){"CompanyId"}) },
                 {"Position", new PropertyMappingValue(new List<string>(){"Position"}) },
-                {"DateOfBirth", new PropertyMappingValue(new List<string>(){"DateOfBirth"}) },
             };
 
         private readonly Dictionary<string, PropertyMappingValue> _companyPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
-                {"RegistrationDate", new PropertyMappingValue(new List<string>() {"RegistrationDate" })},
+                {"CreatedOn", new PropertyMappingValue(new List<string>() {"CreatedOn" })},
                 {"Name", new PropertyMappingValue(new List<string>(){"Name"}) },
                 {"HqCity", new PropertyMappingValue(new List<string>() {"HqCity" }) },
                 {"CountryCity", new PropertyMappingValue(new List<string>(){"CountryCity"}) },
@@ -52,7 +48,7 @@ namespace Rekommend_BackEnd.Services
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
-                {"CreationDate", new PropertyMappingValue(new List<string>() {"CreationDate" })},
+                {"CreatedOn", new PropertyMappingValue(new List<string>() {"CreatedOn" })},
                 {"Rekommender", new PropertyMappingValue(new List<string>(){"Rekommender"}) },
                 {"TechJobOpening", new PropertyMappingValue(new List<string>() {"TechJobOpening" }) },
                 {"FirstName", new PropertyMappingValue(new List<string>(){"FirstName"}) },
@@ -66,31 +62,12 @@ namespace Rekommend_BackEnd.Services
                 {"HasAlreadyWorkedWithRekommender", new PropertyMappingValue(new List<string>(){"HasAlreadyWorkedWithRekommender" }) }
             };
 
-        private readonly Dictionary<string, PropertyMappingValue> _rekommenderPropertyMapping =
-            new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
-            {
-                {"Id", new PropertyMappingValue(new List<string>(){"Id"}) },
-                {"RegistrationDate", new PropertyMappingValue(new List<string>() {"RegistrationDate" })},
-                {"DateOfBirth", new PropertyMappingValue(new List<string>(){"Age"}) },
-                {"FirstName", new PropertyMappingValue(new List<string>(){"FirstName"}) },
-                {"LastName", new PropertyMappingValue(new List<string>(){"LastName"}) },
-                {"Position", new PropertyMappingValue(new List<string>(){"Position"}) },
-                {"Seniority", new PropertyMappingValue(new List<string>(){"Seniority"}) },
-                {"Company", new PropertyMappingValue(new List<string>(){"Company"}) },
-                {"Email", new PropertyMappingValue(new List<string>(){"Email"}) },
-                {"City", new PropertyMappingValue(new List<string>(){"City"}) },
-                {"PostCode", new PropertyMappingValue(new List<string>(){"PostCode"}) },
-                {"XpRekommend", new PropertyMappingValue(new List<string>(){"XpRekommend" }) },
-                {"RekommendationsAvgGrade", new PropertyMappingValue(new List<string>(){"RekommendationsAvgGrade" }) }
-            };
-
         public PropertyMappingService()
         {
             _propertyMappings.Add(new PropertyMapping<TechJobOpeningDto, TechJobOpening>(_techJobOpeningPropertyMapping));
-            _propertyMappings.Add(new PropertyMapping<RecruiterDto, Recruiter>(_recruiterPropertyMapping));
+            _propertyMappings.Add(new PropertyMapping<ExtendedUserDto, ExtendedUser>(_extendedUserPropertyMapping));
             _propertyMappings.Add(new PropertyMapping<CompanyDto, Company>(_companyPropertyMapping));
             _propertyMappings.Add(new PropertyMapping<RekommendationDto, Rekommendation>(_rekommendationPropertyMapping));
-            _propertyMappings.Add(new PropertyMapping<RekommenderDto, Rekommender>(_rekommenderPropertyMapping));
         }
 
         public bool ValidMappingExistsFor<TSource, TDestination>(string fields)
@@ -134,7 +111,7 @@ namespace Rekommend_BackEnd.Services
 
             if(matchingMapping.Count() == 1)
             {
-                return matchingMapping.First()._mappingDictionary;
+                return matchingMapping.First().MappingDictionary;
             }
 
             throw new Exception("Cannot find exact property mapping instance " + $"for <{typeof(TSource)},{typeof(TDestination)}");

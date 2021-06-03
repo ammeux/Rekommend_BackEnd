@@ -29,7 +29,7 @@ namespace Rekommend_BackEnd.Repositories
 
         public IQueryable<TechJobOpening> GetTechJobOpenings()
         {
-            return _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company) as IQueryable<TechJobOpening>;
+            return _context.TechJobOpenings.Include(d => d.Company) as IQueryable<TechJobOpening>;
         }
 
         public async Task<IPagedList<TechJobOpening>> GetTechJobOpeningsAsync(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters)
@@ -44,7 +44,7 @@ namespace Rekommend_BackEnd.Repositories
             var companyCategory = techJobOpeningsResourceParameters.CompanyCategory.ToCompanyCategory();
             if (companyCategory != CompanyCategory.Undefined)
             {
-                collection = collection.Where(a => a.Recruiter.Company.Category == companyCategory);
+                collection = collection.Where(a => a.Company.Category == companyCategory);
             }
 
             var jobTechLanguage = techJobOpeningsResourceParameters.JobTechLanguage.ToJobTechLanguage();
@@ -91,7 +91,7 @@ namespace Rekommend_BackEnd.Repositories
             if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.SearchQuery))
             {
                 var searchQuery = techJobOpeningsResourceParameters.SearchQuery.Trim();
-                collection = collection.Where(a => a.Recruiter.Company.Name.ToLower().Contains(searchQuery.ToLower()));
+                collection = collection.Where(a => a.Company.Name.ToLower().Contains(searchQuery.ToLower()));
             }
 
             if(!string.IsNullOrWhiteSpace(techJobOpeningsResourceParameters.OrderBy))
@@ -115,14 +115,14 @@ namespace Rekommend_BackEnd.Repositories
         //    return _context.Recruiters.Where(a => recruiterIds.Contains(a.Id)).ToDictionary(x=>x.Id, y=>y);
         //}
 
-        public async Task<IPagedList<Recruiter>> GetRecruitersAsync(RecruitersResourceParameters recruitersResourceParameters)
+        public async Task<IPagedList<ExtendedUser>> GetExtendedUsersAsync(ExtendedUsersResourceParameters recruitersResourceParameters)
         {
             if (recruitersResourceParameters == null)
             {
                 throw new ArgumentNullException(nameof(recruitersResourceParameters));
             }
 
-            var collection = _context.Recruiters as IQueryable<Recruiter>;
+            var collection = _context.Recruiters as IQueryable<ExtendedUser>;
 
             var recruiterPosition = recruitersResourceParameters.RecruiterPosition.ToRecruiterPosition();
             if(recruiterPosition != RecruiterPosition.Undefined)
@@ -145,12 +145,12 @@ namespace Rekommend_BackEnd.Repositories
             if (!string.IsNullOrWhiteSpace(recruitersResourceParameters.OrderBy))
             {
                 // get property mapping dictionary
-                var recruiterMappingDictionary = _propertyMappingService.GetPropertyMapping<RecruiterDto, Recruiter>();
+                var recruiterMappingDictionary = _propertyMappingService.GetPropertyMapping<ExtendedUserDto, ExtendedUser>();
 
                 collection = collection.ApplySort(recruitersResourceParameters.OrderBy, recruiterMappingDictionary);
             }
 
-            return await Utils.PagedList<Recruiter>.Create(collection, recruitersResourceParameters.PageNumber, recruitersResourceParameters.PageSize);
+            return await Utils.PagedList<ExtendedUser>.Create(collection, recruitersResourceParameters.PageNumber, recruitersResourceParameters.PageSize);
         }
 
         //public IEnumerable<Recruiter> GetCompanies(IEnumerable<Guid> companyIds)
@@ -213,17 +213,17 @@ namespace Rekommend_BackEnd.Repositories
             return await Utils.PagedList<Company>.Create(collection, companiesResourceParameters.PageNumber, companiesResourceParameters.PageSize);
         }
 
-        public async Task<Recruiter> GetRecruiterAsync(Guid recruiterId)
+        public async Task<ExtendedUser> GetExtendedUserAsync(Guid recruiterId)
         {
             if (recruiterId == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(recruiterId));
             }
 
-            return await _context.Recruiters.Include(d => d.Company).FirstOrDefaultAsync(a => a.Id == recruiterId);
+            return await _context.Recruiters.Include(d => d.Company).FirstOrDefaultAsync(a => a.UserId == recruiterId);
         }
 
-        public void AddRecruiter(Guid companyId, Recruiter recruiter)
+        public void AddExtendedUser(Guid companyId, ExtendedUser recruiter)
         {
             var company = _context.Companies.FirstOrDefault(a => a.Id == companyId);
             if(companyId == null || company == null)
@@ -237,7 +237,7 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             recruiter.Id = Guid.NewGuid();
-            recruiter.RegistrationDate = DateTimeOffset.Now;
+            recruiter.CreatedOn = DateTimeOffset.Now;
             recruiter.CompanyId = companyId;
             _context.Recruiters.Add(recruiter);
         }
@@ -259,7 +259,7 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             company.Id = Guid.NewGuid();
-            company.RegistrationDate = DateTimeOffset.Now;
+            company.CreatedOn = DateTimeOffset.Now;
             _context.Companies.Add(company);
         }
 
@@ -270,7 +270,7 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(techJobOpeningId));
             }
 
-            return await _context.TechJobOpenings.Include(d => d.Recruiter).Include(d => d.Recruiter.Company).FirstOrDefaultAsync(a => a.Id == techJobOpeningId);
+            return await _context.TechJobOpenings.Include(d => d.CreatedBy).Include(d => d.Company).FirstOrDefaultAsync(a => a.Id == techJobOpeningId);
         }
 
         public void AddTechJobOpening(Guid recruiterId, TechJobOpening techJobOpening)
@@ -286,8 +286,10 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             techJobOpening.Id = Guid.NewGuid();
-            techJobOpening.CreationDate = DateTimeOffset.Now;
-            techJobOpening.RecruiterId = recruiterId;
+            techJobOpening.CreatedOn = DateTimeOffset.Now;
+            techJobOpening.CreatedBy = recruiterId;
+            techJobOpening.UpdatedOn = DateTimeOffset.Now;
+            techJobOpening.UpdatedBy = recruiterId;
             _context.TechJobOpenings.Add(techJobOpening);
         }
 
@@ -298,7 +300,7 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(rekommendationId));
             }
 
-            return await _context.Rekommendations.Include(d => d.Rekommender).Include(d => d.TechJobOpening).FirstOrDefaultAsync(a => a.Id == rekommendationId);
+            return await _context.Rekommendations.Include(d => d.TechJobOpening).FirstOrDefaultAsync(a => a.Id == rekommendationId);
         }
 
         public async Task<IPagedList<Rekommendation>> GetRekommendationsAsync(RekommendationsResourceParameters rekommendationsResourceParameters)
@@ -308,7 +310,7 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(rekommendationsResourceParameters));
             }
 
-            var collection = _context.Rekommendations.Include(d=>d.Rekommender).Include(d=>d.TechJobOpening) as IQueryable<Rekommendation>;
+            var collection = _context.Rekommendations.Include(d=>d.TechJobOpening) as IQueryable<Rekommendation>;
 
             var techJobOpeningId = rekommendationsResourceParameters.TechJobOpeningId;
             if (techJobOpeningId != null)
@@ -365,144 +367,63 @@ namespace Rekommend_BackEnd.Repositories
             }
 
             rekommendation.Id = Guid.NewGuid();
-            rekommendation.CreationDate = DateTimeOffset.Now;
-            rekommendation.StatusChangeDate = DateTimeOffset.Now;
-            rekommendation.RekommenderId = rekommenderId;
+            rekommendation.CreatedOn = DateTimeOffset.Now;
+            rekommendation.UpdatedOn = DateTimeOffset.Now;
+            //rekommendation.RekommenderId = rekommenderId;
             rekommendation.Status = RekommendationStatus.EmailToBeVerified;
             rekommendation.Grade = -1;
 
             _context.Rekommendations.Add(rekommendation);
         }
 
-        public void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId)
-        {
-            var rekommender = _context.Rekommenders.FirstOrDefault(a => a.Id == rekommenderId);
-            if (rekommender != null)
-            {
-                IEnumerable<Rekommendation> rekommendationsList = _context.Rekommendations.Where(a => a.RekommenderId == rekommenderId)
-                    .Where(a => a.Status != RekommendationStatus.EmailToBeVerified);
-                int totalRekoGrade = 0;
-                int rekommenderXp = 0;
-                int rekommendationsCount = 0;
-                foreach(Rekommendation rekommendation in rekommendationsList)
-                {
-                    if (rekommendation.Grade != -1)
-                    {
-                        totalRekoGrade += rekommendation.Grade;
-                        rekommendationsCount++;
-                    }
-                        switch (rekommendation.Status)
-                    {
-                        case RekommendationStatus.NotViewed:
-                        case RekommendationStatus.Viewed:
-                            rekommenderXp += 2;
-                            break;
-                        case RekommendationStatus.Selected:
-                            rekommenderXp += 8;
-                            break;
-                        case RekommendationStatus.Accepted:
-                            rekommenderXp += 20;
-                            break;
-                        case RekommendationStatus.Rejected:
-                        case RekommendationStatus.Undefined:
-                        default:
-                            rekommenderXp += 0;
-                            break;
-                    }
-                }
-                rekommender.XpRekommend = rekommenderXp;
-                var avgRekoGrade = (double)totalRekoGrade / rekommendationsCount;
-                rekommender.RekommendationsAvgGrade = (int) Math.Round(avgRekoGrade, MidpointRounding.AwayFromZero);
-            }
-        }
-
-        public async Task<Rekommender> GetRekommenderAsync(Guid rekommenderId)
-        {
-            if (rekommenderId == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(rekommenderId));
-            }
-
-            return  await _context.Rekommenders.FirstOrDefaultAsync(a => a.Id == rekommenderId);
-        }
-
-        public async Task<IPagedList<Rekommender>> GetRekommendersAsync(RekommendersResourceParameters rekommendersResourceParameters)
-        {
-            if (rekommendersResourceParameters == null)
-            {
-                throw new ArgumentNullException(nameof(rekommendersResourceParameters));
-            }
-
-            var collection = _context.Rekommenders as IQueryable<Rekommender>;
-
-            var position = rekommendersResourceParameters.Position;
-            if (position != null)
-            {
-                collection = collection.Where(a => a.Position.ToString() == position);
-            }
-
-            var seniority = rekommendersResourceParameters.Seniority;
-            if (seniority != null)
-            {
-                collection = collection.Where(a => a.Seniority.ToString() == seniority);
-            }
-
-            var company = rekommendersResourceParameters.Company;
-            if (company != null)
-            {
-                collection = collection.Where(a => a.Company == company);
-            }
-
-            var xpRekommend = rekommendersResourceParameters.XpRekommend;
-            if (xpRekommend > 0)
-            {
-                collection = collection.Where(a => a.XpRekommend > xpRekommend);
-            }
-
-            var rekommendationsAvgGrade = rekommendersResourceParameters.RekommendationsAvgGrade;
-            if (rekommendationsAvgGrade > 0)
-            {
-                collection = collection.Where(a => a.RekommendationsAvgGrade > rekommendationsAvgGrade);
-            }
-
-            if (!string.IsNullOrWhiteSpace(rekommendersResourceParameters.SearchQuery))
-            {
-                var searchQuery = rekommendersResourceParameters.SearchQuery.Trim();
-                collection = collection.Where(a => a.LastName.ToLower().Contains(searchQuery.ToLower()));
-            }
-
-            if (!string.IsNullOrWhiteSpace(rekommendersResourceParameters.OrderBy))
-            {
-                // get property mapping dictionary
-                var rekommenderMappingDictionary = _propertyMappingService.GetPropertyMapping<RekommenderDto, Rekommender>();
-
-                collection = collection.ApplySort(rekommendersResourceParameters.OrderBy, rekommenderMappingDictionary);
-            }
-
-            return await Utils.PagedList<Rekommender>.Create(collection, rekommendersResourceParameters.PageNumber, rekommendersResourceParameters.PageSize);
-        }
-
-        public void AddRekommender(Rekommender rekommender)
-        {
-            if (rekommender == null)
-            {
-                throw new ArgumentNullException(nameof(Rekommender));
-            }
-
-            rekommender.Id = Guid.NewGuid();
-            rekommender.RegistrationDate = DateTimeOffset.Now;
-            rekommender.RekommendationsAvgGrade = 0;
-            rekommender.XpRekommend = 0;
-
-            _context.Rekommenders.Add(rekommender);
-        }
+        //public void RecomputeXpAndRekoAvgFromRekommender(Guid rekommenderId)
+        //{
+        //    //var rekommender = _context.Rekommenders.FirstOrDefault(a => a.Id == rekommenderId);
+        //    if (rekommender != null)
+        //    {
+        //        IEnumerable<Rekommendation> rekommendationsList = _context.Rekommendations.Where(a => a.RekommenderId == rekommenderId)
+        //            .Where(a => a.Status != RekommendationStatus.EmailToBeVerified);
+        //        int totalRekoGrade = 0;
+        //        int rekommenderXp = 0;
+        //        int rekommendationsCount = 0;
+        //        foreach(Rekommendation rekommendation in rekommendationsList)
+        //        {
+        //            if (rekommendation.Grade != -1)
+        //            {
+        //                totalRekoGrade += rekommendation.Grade;
+        //                rekommendationsCount++;
+        //            }
+        //                switch (rekommendation.Status)
+        //            {
+        //                case RekommendationStatus.NotViewed:
+        //                case RekommendationStatus.Viewed:
+        //                    rekommenderXp += 2;
+        //                    break;
+        //                case RekommendationStatus.Selected:
+        //                    rekommenderXp += 8;
+        //                    break;
+        //                case RekommendationStatus.Accepted:
+        //                    rekommenderXp += 20;
+        //                    break;
+        //                case RekommendationStatus.Rejected:
+        //                case RekommendationStatus.Undefined:
+        //                default:
+        //                    rekommenderXp += 0;
+        //                    break;
+        //            }
+        //        }
+                //rekommender.XpRekommend = rekommenderXp;
+                //var avgRekoGrade = (double)totalRekoGrade / rekommendationsCount;
+                //rekommender.RekommendationsAvgGrade = (int) Math.Round(avgRekoGrade, MidpointRounding.AwayFromZero);
+            //}
+        //}
 
         public void UpdateTechJobOpening(TechJobOpening techJobOpening)
         {
             // No code necessary in this implementation
         }
 
-        public void UpdateRecruiter(Recruiter recruiter)
+        public void UpdateExtendedUser(ExtendedUser recruiter)
         {
             // No code necessary in this implementation
         }
@@ -517,17 +438,12 @@ namespace Rekommend_BackEnd.Repositories
             // No code necessary in this implementation
         }
 
-        public void UpdateRekommender(Rekommender rekommender)
-        {
-            // No code necessary in this implementation
-        }
-
         public void DeleteTechJobOpening(TechJobOpening techJobOpening)
         {
             _context.TechJobOpenings.Remove(techJobOpening);
         }
 
-        public void DeleteRecruiter(Recruiter recruiter)
+        public void DeleteExtendedUser(ExtendedUser recruiter)
         {
             if(recruiter == null)
             {
@@ -557,16 +473,6 @@ namespace Rekommend_BackEnd.Repositories
             _context.Rekommendations.Remove(rekommendation);
         }
 
-        public void DeleteRekommender(Rekommender rekommender)
-        {
-            if (rekommender == null)
-            {
-                throw new ArgumentNullException(nameof(rekommender));
-            }
-
-            _context.Rekommenders.Remove(rekommender);
-        }
-
         public async Task<bool> SaveChangesAsync()
         {
             return (await _context.SaveChangesAsync() > 0);
@@ -579,7 +485,7 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(recruiterId));
             }
 
-            return _context.Recruiters.Any(a => a.Id == recruiterId);
+            return _context.Recruiters.Any(a => a.UserId == recruiterId);
         }
 
         public void Dispose()

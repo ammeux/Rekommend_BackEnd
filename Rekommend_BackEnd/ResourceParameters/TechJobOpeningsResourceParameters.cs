@@ -10,6 +10,6 @@
         public string JobPosition { get; set; }
         public bool RemoteWorkAccepted { get; set; }
         public string ContractType { get; set; }
-        public string OrderBy { get; set; } = "CreationDate desc";
+        public string OrderBy { get; set; } = "CreatedOn desc";
     }
 }

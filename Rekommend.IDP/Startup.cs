@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using IdentityServerHost.Quickstart.UI;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -65,7 +64,9 @@ namespace Rekommend.IDP
                 "Facebook",
                 options =>
                 {
-                    // NOT TO BE PUBLISHED (REFER TO FB DEVELOPPER)
+                    options.AppId = "253067749922400";
+                    options.AppSecret = "cbe6c7897bc88f9f580500fbf3923795";
+                    options.SignInScheme = IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme;
                 });
         }
 

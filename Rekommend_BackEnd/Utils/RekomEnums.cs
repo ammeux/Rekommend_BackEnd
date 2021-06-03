@@ -35,9 +35,9 @@
         {
             Undefined,
             Junior,
+            MidSenior,
             Senior,
-            Director,
-            Executive
+            Expert
         }
 
         public enum ContractType
@@ -74,6 +74,7 @@
             Undefined,
             Founder,
             TalentAcquisitionManager,
+            Developper,
             Other
         }
 
@@ -84,6 +85,13 @@
             Other
         }
 
+        public enum Profile
+        {
+            Undefined,
+            Tech,
+            NonTech
+        }
+
         public enum ResourceUriType
         {
             PreviousPage,
@@ -91,11 +99,12 @@
             Current
         }
 
-        public enum Gender
+        public enum SubscriptionPlan
         {
-            Undefined,
-            Female,
-            Male
+            None,
+            Basic,
+            Pro,
+            Unlimited
         }
     }
 }
