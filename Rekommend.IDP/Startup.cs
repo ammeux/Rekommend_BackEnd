@@ -64,9 +64,9 @@ namespace Rekommend.IDP
                 "Facebook",
                 options =>
                 {
-                    options.AppId = "SECRET";
-                    options.AppSecret = "SECRET";
-                    options.SignInScheme = IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme;
+                    //options.AppId = "SECRET";
+                    //options.AppSecret = "SECRET";
+                    //options.SignInScheme = IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme;
                 });
         }
 
