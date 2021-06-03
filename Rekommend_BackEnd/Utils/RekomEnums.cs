@@ -3,7 +3,8 @@
     public class RekomEnums
     {
         public enum CompanyCategory
-        {
+        { 
+            Undefined,
             Ecology,
             LocalFood,
             Health,
@@ -12,6 +13,7 @@
 
         public enum JobTechLanguage
         {
+            Undefined,
             JavaScript,
             Python,
             CS,
@@ -20,6 +22,7 @@
 
         public enum Position
         {
+            Undefined,
             TechLeader,
             Developer,
             BusinessAnalyst,
@@ -30,14 +33,16 @@
 
         public enum Seniority
         {
+            Undefined,
             Junior,
+            MidSenior,
             Senior,
-            Director,
-            Executive
+            Expert
         }
 
         public enum ContractType
         {
+            Undefined,
             CDI,
             CDD,
             Internship,
@@ -55,6 +60,7 @@
 
         public enum RekommendationStatus
         {
+            Undefined,
             EmailToBeVerified,
             NotViewed,
             Viewed,
@@ -65,11 +71,40 @@
 
         public enum RecruiterPosition
         {
+            Undefined,
             Founder,
             TalentAcquisitionManager,
+            Developper,
             Other
         }
 
+        public enum Country
+        {
+            Undefined,
+            France,
+            Other
+        }
 
+        public enum Profile
+        {
+            Undefined,
+            Tech,
+            NonTech
+        }
+
+        public enum ResourceUriType
+        {
+            PreviousPage,
+            NextPage,
+            Current
+        }
+
+        public enum SubscriptionPlan
+        {
+            None,
+            Basic,
+            Pro,
+            Unlimited
+        }
     }
 }

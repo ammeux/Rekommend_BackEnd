@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations\20210519123045_InitialMigration.cs" />
+    <Compile Remove="Migrations\20210519123045_InitialMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210519123650_InitialMigration.cs" />
+    <Compile Remove="Migrations\20210519123650_InitialMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210519124631_TryAgainMigration.cs" />
+    <Compile Remove="Migrations\20210519124631_TryAgainMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210519135338_InitialMigration.cs" />
+    <Compile Remove="Migrations\20210519135338_InitialMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210519140549_InitialMigration.cs" />
+    <Compile Remove="Migrations\20210519140549_InitialMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210601183313_MoveAllToIDPUser.cs" />
+    <Compile Remove="Migrations\20210601183313_MoveAllToIDPUser.Designer.cs" />
+    <Compile Remove="Migrations\20210601212605_CleanBackendEntities.cs" />
+    <Compile Remove="Migrations\20210601212605_CleanBackendEntities.Designer.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="IdentityServer4" Version="4.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="3.1.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.4" />
+
+    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
+  </ItemGroup>
+</Project>

@@ -4,18 +4,19 @@ using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Entities
 {
-    public class Company
+    public class Company : AuditableEntity
     {
         [Key]
         public Guid Id { get; set; }
-        [Required]
-        public DateTimeOffset RegistrationDate { get; set; }
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }
         [Required]
         [MaxLength(50)]
         public string HqCity { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string HqCountry { get; set; }
         [Required]
         [MaxLength(1500)]
         public string CompanyDescription { get; set; }
@@ -24,9 +25,13 @@ namespace Rekommend_BackEnd.Entities
         public CompanyCategory Category { get; set; }
         [Required]
         [MaxLength(50)]
-        public string logoFileName { get; set; }
+        public string LogoFileName { get; set; }
         [Required]
         [MaxLength(50)]
         public string Website { get; set; }
+        [MaxLength(50)]
+        public string EmployerBrandWebsite { get; set; }
+        [Required]
+        public int PostCode { get; set; }
     }
 }
