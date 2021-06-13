@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rekommend_BackEnd.Models;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Rekommend_BackEnd.Utils.RekomEnums;
@@ -13,6 +14,11 @@ namespace Rekommend_BackEnd.Entities
         public TechJobOpening TechJobOpening { get; set; }
         [Required]
         public Guid TechJobOpeningId { get; set; }
+        [Required]
+        [ForeignKey("AppUserId")]
+        public AppUser AppUser { get; set; }
+        [Required]
+        public Guid AppUserId { get; set; }
         [Required]
         [MaxLength(50)]
         public string FirstName { get; set; }

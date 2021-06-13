@@ -19,6 +19,12 @@
     <Compile Remove="Migrations\20210601183313_MoveAllToIDPUser.Designer.cs" />
     <Compile Remove="Migrations\20210601212605_CleanBackendEntities.cs" />
     <Compile Remove="Migrations\20210601212605_CleanBackendEntities.Designer.cs" />
+    <Compile Remove="Migrations\20210607204946_AppUserAndRekommendations.cs" />
+    <Compile Remove="Migrations\20210607204946_AppUserAndRekommendations.Designer.cs" />
+    <Compile Remove="Migrations\20210607205128_AppUser.cs" />
+    <Compile Remove="Migrations\20210607205128_AppUser.Designer.cs" />
+    <Compile Remove="Migrations\20210607205415_AppUserMigration.cs" />
+    <Compile Remove="Migrations\20210607205415_AppUserMigration.Designer.cs" />
   </ItemGroup>
   
   <ItemGroup>

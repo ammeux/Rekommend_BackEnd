@@ -12,7 +12,7 @@ namespace Rekommend_BackEnd.Services
         string FirstName { get; set; }
         string LastName { get; set; }
         string Email { get; set; }
-        string Address { get; set; }
+        string City { get; set; }
         Country? Country { get; set; }
         string Company { get; set; }
         Profile? Profile { get; set; }

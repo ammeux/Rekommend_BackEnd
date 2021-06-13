@@ -80,8 +80,6 @@ namespace Rekommend_BackEnd.Controllers
         [Authorize]
         public async Task<IActionResult> GetTechJobOpenings([FromQuery] TechJobOpeningsResourceParameters techJobOpeningsResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
-            //string firstName = _userInfoService.FirstName;
-
             if (!MediaTypeHeaderValue.TryParse(mediaType, out MediaTypeHeaderValue parsedMediaType))
             {
                 _logger.LogInformation($"Media type header value [{mediaType}] not parsable");

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using static Rekommend_BackEnd.Utils.RekomEnums;
 
 namespace Rekommend_BackEnd.Models
@@ -36,5 +37,6 @@ namespace Rekommend_BackEnd.Models
         public JobOfferStatus Status { get; set; }
         public string PictureFileName { get; set; }
         public string RseDescription { get; set; }
+        public ICollection<RekommendationDto> Rekommendations { get; set; } = new List<RekommendationDto>();
     }
 }

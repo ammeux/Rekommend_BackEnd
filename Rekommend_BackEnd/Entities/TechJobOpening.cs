@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Rekommend_BackEnd.Utils.RekomEnums;
@@ -51,6 +52,7 @@ namespace Rekommend_BackEnd.Entities
         [MaxLength(50)]
         public string BonusReward { get; set; }
         public int LikesNb { get; set; }
+        public ICollection<Rekommendation> Rekommendations { get; set; } = new List<Rekommendation>();
         public int RekommendationsNb { get; set; }
         public int ViewsNb { get; set; }
         public int MinimumSalary { get; set; }

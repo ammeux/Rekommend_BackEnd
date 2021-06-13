@@ -22,6 +22,26 @@ namespace Rekommend_BackEnd.DbContexts
         public DbSet<TechJobOpening> TechJobOpenings { get; set; }
         public DbSet<ExtendedUser> Recruiters { get; set; }
         public DbSet<Rekommendation> Rekommendations { get; set; }
+        public DbSet<AppUser> AppUsers { get; set; }
+
+        // Not useful
+
+        //protected override void OnModelCreating(ModelBuilder builder)
+        //{
+        //    base.OnModelCreating(builder);
+
+        //    builder.Entity<Rekommendation>(x => x.HasKey(aa => new { aa.AppUserId, aa.TechJobOpeningId }));
+
+        //    builder.Entity<Rekommendation>()
+        //        .HasOne(u => u.AppUser)
+        //        .WithMany(a => a.Rekommendations)
+        //        .HasForeignKey(aa => aa.AppUserId);
+
+        //    builder.Entity<Rekommendation>()
+        //        .HasOne(u => u.TechJobOpening)
+        //        .WithMany(a => a.Rekommendations)
+        //        .HasForeignKey(aa => aa.TechJobOpeningId);
+        //}
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
         {

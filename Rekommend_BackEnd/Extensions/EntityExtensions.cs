@@ -1,5 +1,6 @@
 ﻿using Rekommend_BackEnd.Entities;
 using Rekommend_BackEnd.Models;
+using System.Collections.Generic;
 
 namespace Rekommend_BackEnd.Extensions
 {
@@ -39,8 +40,44 @@ namespace Rekommend_BackEnd.Extensions
                 MaximumSalary = source.MaximumSalary,
                 Status = source.Status,
                 PictureFileName = source.PictureFileName,
-                RseDescription = source.RseDescription
+                RseDescription = source.RseDescription,
+                Rekommendations = ToRekommendationDtoCollection(source.Rekommendations)
             };
+        }
+
+        public static ICollection<RekommendationDto> ToRekommendationDtoCollection(ICollection<Rekommendation> rekommendations)
+        {
+            List<RekommendationDto> rekommendationDtoList = new List<RekommendationDto>();
+
+            foreach (var reko in rekommendations)
+            {
+                rekommendationDtoList.Add(
+                    new RekommendationDto
+                    {
+                        Id = reko.Id,
+                        CreatedOn = reko.CreatedOn,
+                        RekommenderId = reko.AppUser.Id,
+                        RekommenderFirstName = reko.AppUser.FirstName,
+                        RekommenderLastName = reko.AppUser.LastName,
+                        RekommenderProfile = reko.AppUser.Profile.ToString(),
+                        RekommenderSeniority = reko.AppUser.Seniority.ToString(),
+                        RekommenderCompany = reko.AppUser.Company,
+                        RekommenderEmail = reko.AppUser.Email,
+                        RekommenderCity = reko.AppUser.City,
+                        TechJobOpeningId = reko.TechJobOpeningId,
+                        TechJobOpeningTitle = reko.TechJobOpening.Title,
+                        FirstName = reko.FirstName,
+                        LastName = reko.LastName,
+                        Position = reko.Position.ToString(),
+                        Seniority = reko.Seniority.ToString(),
+                        Company = reko.Company,
+                        Email = reko.Email,
+                        Comment = reko.Comment,
+                        Status = reko.Status.ToString(),
+                        HasAlreadyWorkedWithRekommender = reko.HasAlreadyWorkedWithRekommender
+                    });
+            }
+            return rekommendationDtoList;
         }
 
         public static TechJobOpeningForUpdateDto ToUpdateDto(this TechJobOpening source)

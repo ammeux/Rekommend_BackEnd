@@ -7,6 +7,8 @@
   <ItemGroup>
     <Compile Remove="Migrations\20201223124404_ShouldNotAddMigration.cs" />
     <Compile Remove="Migrations\20201223124404_ShouldNotAddMigration.Designer.cs" />
+    <Compile Remove="Migrations\20210607205452_AppUserAndRekommendationMigration.cs" />
+    <Compile Remove="Migrations\20210607205452_AppUserAndRekommendationMigration.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
