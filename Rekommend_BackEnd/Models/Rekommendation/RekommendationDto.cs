@@ -11,12 +11,11 @@ namespace Rekommend_BackEnd.Models
         public Guid RekommenderId { get; set; }
         public string RekommenderFirstName { get; set; }
         public string RekommenderLastName { get; set; }
-        public string RekommenderPosition { get; set; }
+        public string RekommenderProfile { get; set; }
         public string RekommenderSeniority { get; set; }
         public string RekommenderCompany { get; set; }
         public string RekommenderEmail { get; set; }
         public string RekommenderCity { get; set; }
-        public int RekommenderPostCode { get; set; }
 
         public Guid TechJobOpeningId { get; set; }
         public string TechJobOpeningTitle { get; set; }

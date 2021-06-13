@@ -28,13 +28,15 @@ namespace Rekommend_BackEnd.Controllers
         private readonly IRekommendRepository _repository;
         private readonly IPropertyMappingService _propertyMappingService;
         private readonly ILogger<CompanyController> _logger;
+        private readonly IUserInfoService _userInfoService;
 
-        public RekommendationController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<CompanyController> logger)
+        public RekommendationController(IRekommendRepository repository, IPropertyCheckerService propertyCheckerService, IPropertyMappingService propertyMappingService, ILogger<CompanyController> logger, IUserInfoService userInfoService)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _propertyCheckerService = propertyCheckerService ?? throw new ArgumentNullException(nameof(propertyCheckerService));
             _propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userInfoService = userInfoService ?? throw new ArgumentNullException(nameof(userInfoService));
         }
 
         [HttpCacheExpiration(CacheLocation = CacheLocation.Private, MaxAge = 120)]
@@ -103,8 +105,19 @@ namespace Rekommend_BackEnd.Controllers
         [RekommendationFilter]
         public async Task<ActionResult<RekommendationDto>> CreateRekommendation(RekommendationForCreationDto rekommendationForCreationDto)
         {
-            // A modifier lors de l'implementation de l'authentification
-            Guid rekommenderId = Guid.Parse("aaaef973-d8ce-4c92-95b4-3635bb2d42d1");
+            AppUser appUser = new AppUser
+            {
+                Id = _userInfoService.UserId,
+                FirstName = _userInfoService.FirstName,
+                LastName = _userInfoService.LastName,
+                Email = _userInfoService.Email,
+                Company = _userInfoService.Company,
+                City = _userInfoService.City,
+                Country = _userInfoService.Country,
+                Seniority = _userInfoService.Seniority,
+                Stack = _userInfoService.Stack,
+                Profile = _userInfoService.Profile
+            };
 
             var techJobOpeningId = rekommendationForCreationDto.TechJobOpeningId;
 
@@ -112,7 +125,7 @@ namespace Rekommend_BackEnd.Controllers
             {
                 var rekommendation = rekommendationForCreationDto.ToEntity();
 
-                _repository.AddRekommendation(rekommenderId, rekommendation);
+                _repository.AddRekommendation(appUser, rekommendation);
 
                 await _repository.SaveChangesAsync();
 

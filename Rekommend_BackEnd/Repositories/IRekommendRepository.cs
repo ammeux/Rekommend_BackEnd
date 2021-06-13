@@ -33,7 +33,7 @@ namespace Rekommend_BackEnd.Repositories
         // Rekommendation
         Task<Rekommendation> GetRekommendationAsync(Guid rekommendationId);
         Task<IPagedList<Rekommendation>> GetRekommendationsAsync(RekommendationsResourceParameters rekommendationsResourceParameters);
-        void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation);
+        void AddRekommendation(AppUser appUser, Rekommendation rekommendation);
         void UpdateRekommendation(Rekommendation rekommendation);
         void DeleteRekommendation(Rekommendation rekommendation);
 

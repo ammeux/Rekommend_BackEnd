@@ -29,7 +29,7 @@ namespace Rekommend_BackEnd.Repositories
 
         public IQueryable<TechJobOpening> GetTechJobOpenings()
         {
-            return _context.TechJobOpenings.Include(d => d.Company) as IQueryable<TechJobOpening>;
+            return _context.TechJobOpenings.Include(d => d.Company).Include(d=>d.Rekommendations).ThenInclude(u=>u.AppUser) as IQueryable<TechJobOpening>;
         }
 
         public async Task<IPagedList<TechJobOpening>> GetTechJobOpeningsAsync(TechJobOpeningsResourceParameters techJobOpeningsResourceParameters)
@@ -223,6 +223,16 @@ namespace Rekommend_BackEnd.Repositories
             return await _context.Recruiters.Include(d => d.Company).FirstOrDefaultAsync(a => a.UserId == recruiterId);
         }
 
+        public bool IsAppUserInDb(Guid appUserId)
+        {
+            if (appUserId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(appUserId));
+            }
+
+            return _context.AppUsers.FirstOrDefault(a => a.Id == appUserId) != null;
+        }
+
         public void AddExtendedUser(Guid companyId, ExtendedUser recruiter)
         {
             var company = _context.Companies.FirstOrDefault(a => a.Id == companyId);
@@ -240,6 +250,16 @@ namespace Rekommend_BackEnd.Repositories
             recruiter.CreatedOn = DateTimeOffset.Now;
             recruiter.CompanyId = companyId;
             _context.Recruiters.Add(recruiter);
+        }
+
+        public void AddAppUser(AppUser appUser)
+        {
+            if (appUser == null)
+            {
+                throw new ArgumentNullException(nameof(appUser));
+            }
+
+            _context.AppUsers.Add(appUser);
         }
 
         public async Task<Company> GetCompanyAsync(Guid companyId)
@@ -270,7 +290,7 @@ namespace Rekommend_BackEnd.Repositories
                 throw new ArgumentNullException(nameof(techJobOpeningId));
             }
 
-            return await _context.TechJobOpenings.Include(d => d.CreatedBy).Include(d => d.Company).FirstOrDefaultAsync(a => a.Id == techJobOpeningId);
+            return await _context.TechJobOpenings.Include(d => d.Rekommendations).ThenInclude(u => u.AppUser).FirstOrDefaultAsync(d => d.Id == techJobOpeningId);
         }
 
         public void AddTechJobOpening(Guid recruiterId, TechJobOpening techJobOpening)
@@ -359,7 +379,7 @@ namespace Rekommend_BackEnd.Repositories
             return await Utils.PagedList<Rekommendation>.Create(collection, rekommendationsResourceParameters.PageNumber, rekommendationsResourceParameters.PageSize);
         }
 
-        public void AddRekommendation(Guid rekommenderId, Rekommendation rekommendation)
+        public void AddRekommendation(AppUser rekommender, Rekommendation rekommendation)
         {
             if (rekommendation == null)
             {
@@ -369,7 +389,14 @@ namespace Rekommend_BackEnd.Repositories
             rekommendation.Id = Guid.NewGuid();
             rekommendation.CreatedOn = DateTimeOffset.Now;
             rekommendation.UpdatedOn = DateTimeOffset.Now;
-            //rekommendation.RekommenderId = rekommenderId;
+
+            // Check if AppUser is present if Db first
+            if(!IsAppUserInDb(rekommender.Id))
+            {
+                AddAppUser(rekommender);
+            }
+
+            rekommendation.AppUserId = rekommender.Id;
             rekommendation.Status = RekommendationStatus.EmailToBeVerified;
             rekommendation.Grade = -1;
 

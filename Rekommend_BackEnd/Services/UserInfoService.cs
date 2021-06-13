@@ -14,7 +14,7 @@ namespace Rekommend_BackEnd.Services
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public string Address { get; set; }
+        public string City { get; set; }
         public Country? Country { get; set; }
         public string Company { get; set; }
         public Profile? Profile { get; set; }
@@ -41,7 +41,7 @@ namespace Rekommend_BackEnd.Services
             FirstName = currentContext.User.Claims.FirstOrDefault(c => c.Type == "given_name")?.Value;
             LastName = currentContext.User.Claims.FirstOrDefault(c => c.Type == "family_name")?.Value;
             Email = currentContext.User.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
-            Address = currentContext.User.Claims.FirstOrDefault(c => c.Type == "address")?.Value;
+            City = currentContext.User.Claims.FirstOrDefault(c => c.Type == "address")?.Value;
             Country = currentContext.User.Claims.FirstOrDefault(c => c.Type == "country")?.Value.ToCountry();
             Company = currentContext.User.Claims.FirstOrDefault(c => c.Type == "company")?.Value;
             Profile = currentContext.User.Claims.FirstOrDefault(c => c.Type == "profile")?.Value.ToProfile();
